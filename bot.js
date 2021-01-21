@@ -6,6 +6,7 @@ const mal = new Jikan();
 const token = '1531381275:AAGkxWk7fzmNpDVMgzImbA0s-95W7cxtHVw';
 const bot = new Telegraf(token);
 
+
 bot.start((context) => {
     context.reply('Welcome');
 });
@@ -20,20 +21,7 @@ bot.help((context) => {
     ]
     context.reply(`What are you, stupid? Here's what I can do:\n${help.map((item) => `- ${item.command}: ${item.description}`).join('\n')}`)
 })
-// bot.on('text', (context) => {
-//     const animes = [
-//         'Shingeki no Kyojin: The Final Season',
-//         'Yakusoku no Neverland 2nd Season',
-//         'Dr. Stone: Stone Wars',
-//         'Tensei shitara Slime Datta Ken 2nd Season',
-//         'Re:Zero kara Hajimeru Isekai Seikatsu 2nd Season Part 2',
-//         'Horimiya',
-//         '5-toubun no Hanayome ∬',
-//         'Mushoku Tensei: Isekai Ittara Honki Dasu',
-//         'Beastars 2nd Season',
-//     ];
-//     context.reply(animes.map((anime) => `- ${anime}.`).join('\n'));
-// })
+
 bot.command('season', (context) => {
     context.reply('Okay, getting your seasonals...');
     const today = new Date();
@@ -59,6 +47,7 @@ bot.command('lefo', (context) => {
     context.replyWithHTML(`<b>LEFO</b>`)
 })
 
+// testing images things
 let listenImages = true; let imageCount = 0;
 bot.command('image', (context) => {
     if (listenImages) {
@@ -73,6 +62,22 @@ bot.command('image', (context) => {
         setTimeout(() => {listenImages = true}, 10000);
     }
 });
+
+const stickers = [
+    {name: 'perplexed', id: 'CAACAgEAAxkBAAEEnnxgCP2MY2JGWC-2U9I_-OS-ovPZswACVwEAAkdFSUQ56uxEmLNyPh4E'},
+    {name: 'blushedFanart', id: 'CAACAgEAAxkBAAEEnn5gCP2VKPphMQdLBkpnbovSMt5EtAACKwEAAsJvSURcv4WIUCt53R4E'},
+    {name: 'epic', id: 'CAACAgEAAxkBAAEEnoBgCP2esjmXZ6MPohn62ojjoMGnXAAC8wADnplJRHDdXror4bPPHgQ'},
+    {name: 'upset', id: 'CAACAgEAAxkBAAEEnoJgCP2k1ofenyNXaYDhip2G-kD9GAAC9QADTspJRAbJWAABnmlsVR4E'},
+    {name: 'gekota', id: 'CAACAgEAAxkBAAEEnoRgCP2vrKmV00kdiFvUqdT3YV3nWQAC9gEAAiyZSEQnDFFwj_UjiR4E'},
+    {name: 'blushingAnxious', id: 'CAACAgEAAxkBAAEEnoZgCP21rdzB8xnZ0ajH7ZD9CzSRngACWwEAAoTESETY-NagmRfzVx4E'},
+    {name: 'confused', id: 'CAACAgEAAxkBAAEEnohgCP27lD9y2CAMdL5JQE8UVsvfcgACcgEAAgUxSUQh96FNkPU0kR4E'},
+    {name: 'tsundere', id: 'CAACAgEAAxkBAAEEnopgCP3CE8yaTuDc3tncFTUyoVRf3AACywEAAqkESETpmdvf9ZJBHh4E'},
+    {name: 'blushedAnxious2', id: 'CAACAgEAAxkBAAEEnoxgCP3HOYl1Kgu7fQJNonfq9VsILgACNwEAAlYYSUTUAyXoePMPZh4E'},
+    {name: 'blushingDirect', id: 'CAACAgEAAxkBAAEEno5gCP3OU2fbFOM7z2c7JX9908CdPwACbAEAAhcRSETcoT6w_YxEih4E'},
+]
+bot.command('sticker', (context) => {
+    context.replyWithSticker(stickers[Math.floor(Math.random() * (stickers.length - 1) + 0)].id);
+})
 
 bot.launch();
 
