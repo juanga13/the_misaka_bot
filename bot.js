@@ -1,5 +1,6 @@
 /* deps */
 const {Telegraf} = require('telegraf');
+const Extra = require('telegraf/extra');
 const Jikan = require('jikan-node');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -27,7 +28,7 @@ bot.help((context) => {
         {command: '/lefo', description: `LEFO.`},
         {command: '/image', description: `random image.`},
     ]
-    context.reply(`What are you, stupid? Here's what I can do:\n${help.map((item) => `- ${item.command}: ${item.description}`).join('\n')}`)
+    _sendMessage(context, MESSAGE_TYPES.text, `What are you, stupid? Here's what I can do:\n${help.map((item) => `- ${item.command}: ${item.description}`).join('\n')}`)
 })
 
 /**
@@ -49,7 +50,7 @@ bot.help((context) => {
  *    - anime news
  */
 bot.command('season', (context) => {
-    context.reply('Okay, getting your seasonals...');
+    _sendMessage(context, MESSAGE_TYPES.text, 'Okay, getting your seasonals...');
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth();
@@ -63,8 +64,8 @@ bot.command('season', (context) => {
     };
     mal.findSeason(seasonString(), year)
         .then((info) => {
-            context.reply(info.anime.slice(0, 9).map((anAnime) => `- ${anAnime.title} [Score: ${anAnime.score}].`).join('\n'));
-            context.reply(`It's not like I made this list for you, b-baka!`);
+            _sendMessage(context, MESSAGE_TYPES.text, info.anime.slice(0, 9).map((anAnime) => `- ${anAnime.title} [Score: ${anAnime.score}].`).join('\n'));
+            _sendMessage(context, MESSAGE_TYPES.text, `It's not like I made this list for you, b-baka!`);
         })
         .catch((error) => {console.log(error)});
 });
@@ -76,7 +77,7 @@ bot.command('season', (context) => {
  * to do cool things in the future
  */
 bot.command('lefo', (context) => {
-    context.replyWithHTML(`<b>LEFO</b>`)
+    _sendMessage(context, MESSAGE_TYPES.html, `<b>LEFO</b>`)
 })
 
 /**
@@ -88,10 +89,10 @@ let listenImages = true; let imageCount = 0;
 bot.command('image', (context) => {
     if (listenImages) {
         if (imageCount === 0) {
-            context.replyWithPhoto('https://picsum.photos/200/200/');
+            _sendMessage(context, MESSAGE_TYPES.photo, 'https://picsum.photos/200/200/');
             imageCount = 1;
         } else {
-            context.replyWithPhoto('https://picsum.photos/210/210/');            
+            _sendMessage(context, MESSAGE_TYPES.photo, 'https://picsum.photos/210/210/');            
             imageCount = 0;
         }
         listenImages = false;
@@ -120,7 +121,7 @@ const stickers = [
     {name: 'blushingDirect', id: 'CAACAgEAAxkBAAEEno5gCP3OU2fbFOM7z2c7JX9908CdPwACbAEAAhcRSETcoT6w_YxEih4E'},
 ]
 bot.command('sticker', (context) => {
-    context.replyWithSticker(stickers[Math.floor(Math.random() * (stickers.length - 1) + 0)].id);
+    _sendMessage(context, MESSAGE_TYPES.sticker, stickers[Math.floor(Math.random() * (stickers.length - 1) + 0)].id);
 });
 
 /**
@@ -128,29 +129,47 @@ bot.command('sticker', (context) => {
  * Todo list:
  *  - integrate with interval to give numbers of the day
  */
-bot.command('numbers', (context) => {
+bot.command('nhentai', (context) => {
     let magicNumbers = '';
     [0, 1, 2, 3, 4, 5].forEach(() => magicNumbers += Math.floor(Math.random() * 9));
     // console.log(magicNumbers.toString());
-    context.reply(magicNumbers);
+    _sendMessage(context, MESSAGE_TYPES.text, `https://nhentai.net/g/${magicNumbers}`);
 });
 
 /**
  * First interval message sender, for now it sends to 
  * the weeb's group that message at 5pm lol
  */
-let timer = null;
-bot.command('start', message => {
-    timer = setInterval(() => {
-        if(new Date().getHours() === 17) {
-            bot.sendMessage('-449065093', "Daily reminder of existence.");    
-        }
-    }, 1000)    
-});
+// let timer = null;
+// bot.on('text', (context) => {
+    // timer = setInterval(() => {
+    //     if(new Date().getHours() === 18) {
+    //         bot.telegram.sendMessage('-449065093', "Daily reminder of existence.");    
+    //     }
+    // }, 1000)    
+// });
 
-bot.command('stop', message => {
-    clearInterval(timer);
-})
+/**
+ * Auxiliaries
+ */
+const MESSAGE_TYPES = {text: 'text', sticker: 'sticker', html: 'html', photo: 'photo'};
+
+const _sendMessage = (context, type, message, options) => {
+    // if (context.chat.id === process.env.WEEBS_GROUP_ID) return;
+    
+    const now = new Date();
+    const isOlder = now.getTime() > context.message.date*1000;
+    if (isOlder) {
+        // context.reply('This message is older, ignored', Extra.inReplyTo(context.message.message_id));
+    } else {
+        switch (type) {
+            case MESSAGE_TYPES.text: context.reply(message); break;
+            case MESSAGE_TYPES.sticker: context.replyWithSticker(message); break;
+            case MESSAGE_TYPES.html: context.replyWithHTML(message); break;
+            case MESSAGE_TYPES.photo: context.replyWithPhoto(message); break;
+        }
+    }
+}
 
 /**
  * Cool reaction system for automatically reply when trigger word
