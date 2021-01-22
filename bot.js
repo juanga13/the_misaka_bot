@@ -27,6 +27,8 @@ bot.help((context) => {
         {command: '/season', description: `this seasonal's animes.`},
         {command: '/lefo', description: `LEFO.`},
         {command: '/image', description: `random image.`},
+        {command: '/sticker [reaction]', description: `random sticker unless reaction is given, See '/sticker list' for every sticker.`},
+        {command: '/nhentai', description: `yyyyep.`},
     ]
     _sendMessage(context, MESSAGE_TYPES.text, `What are you, stupid? Here's what I can do:\n${help.map((item) => `- ${item.command}: ${item.description}`).join('\n')}`)
 })
@@ -88,13 +90,8 @@ bot.command('lefo', (context) => {
 let listenImages = true; let imageCount = 0;
 bot.command('image', (context) => {
     if (listenImages) {
-        if (imageCount === 0) {
-            _sendMessage(context, MESSAGE_TYPES.photo, 'https://picsum.photos/200/200/');
-            imageCount = 1;
-        } else {
-            _sendMessage(context, MESSAGE_TYPES.photo, 'https://picsum.photos/210/210/');            
-            imageCount = 0;
-        }
+        _sendMessage(context, MESSAGE_TYPES.photo, `https://picsum.photos/20${imageCount}/20${imageCount}/`);
+        imageCount += 1;            
         listenImages = false;
         setTimeout(() => {listenImages = true}, 10000);
     }
@@ -121,7 +118,19 @@ const stickers = [
     {name: 'blushingDirect', id: 'CAACAgEAAxkBAAEEno5gCP3OU2fbFOM7z2c7JX9908CdPwACbAEAAhcRSETcoT6w_YxEih4E'},
 ]
 bot.command('sticker', (context) => {
-    _sendMessage(context, MESSAGE_TYPES.sticker, stickers[Math.floor(Math.random() * (stickers.length - 1) + 0)].id);
+    const args = context.message.text.split(' ');
+    const secondArg = args.length > 1 && args[1];
+    if (args.length > 1) {
+        if (secondArg === 'list') {
+            _sendMessage(context, MESSAGE_TYPES.text, `List of stickers:\n${stickers.map((sticker) => `- ${sticker.name}.`).join('\n')}`);
+        } else {
+            const foundSticker = stickers.find((sticker) => sticker.name === secondArg);
+            if (!foundSticker) _sendMessage(context, MESSAGE_TYPES.text, `Reaction not found, enter '/sticker list' for all sticker reactions.`);
+            else _sendMessage(context, MESSAGE_TYPES.sticker, foundSticker.id);
+        }
+    } else {
+        _sendMessage(context, MESSAGE_TYPES.sticker, stickers[Math.floor(Math.random() * (stickers.length - 1) + 0)].id);
+    }
 });
 
 /**
@@ -148,28 +157,6 @@ bot.command('nhentai', (context) => {
     //     }
     // }, 1000)    
 // });
-
-/**
- * Auxiliaries
- */
-const MESSAGE_TYPES = {text: 'text', sticker: 'sticker', html: 'html', photo: 'photo'};
-
-const _sendMessage = (context, type, message, options) => {
-    // if (context.chat.id === process.env.WEEBS_GROUP_ID) return;
-    
-    const now = new Date();
-    const isOlder = now.getTime() > context.message.date*1000;
-    if (isOlder) {
-        // context.reply('This message is older, ignored', Extra.inReplyTo(context.message.message_id));
-    } else {
-        switch (type) {
-            case MESSAGE_TYPES.text: context.reply(message); break;
-            case MESSAGE_TYPES.sticker: context.replyWithSticker(message); break;
-            case MESSAGE_TYPES.html: context.replyWithHTML(message); break;
-            case MESSAGE_TYPES.photo: context.replyWithPhoto(message); break;
-        }
-    }
-}
 
 /**
  * Cool reaction system for automatically reply when trigger word
@@ -209,6 +196,69 @@ const _sendMessage = (context, type, message, options) => {
 //         default: break;
 //     }
 // });
+
+let todos = [];
+const createTodo = (text) => todos.push({text, checked: false});
+const deleteTodo = (number) => {todos = todos.filter((todo, i) => i !== number)};
+const checkTodo = (number) => {todos[number] = {...todos[number], checked: true}};
+const printTodos = (context) => _sendMessage(
+    context,
+    MESSAGE_TYPES.text,
+    `Todos:${todos.length === 0 ? ' no todos.' : (todos.map((todo, i) => `\n${i}. [${todo.checked ? 'x' : ' '}] ${todo.text}.`))}`
+);
+bot.command('todo', (context) => {
+    const args = context.message.text.split(' ');
+    if (args.length === 1) {
+        printTodos(context);
+    } else {
+        const secondArg = args[1];
+        if (secondArg === 'add') {
+            if (!args[2]) {
+                _sendMessage(context, MESSAGE_TYPES.text, `Cannot add empty todo.`);
+            } else {
+                createTodo(args.slice(2).join(' '));
+                printTodos(context);
+            }
+        } else if (secondArg === 'remove' || secondArg === 'check') {
+            if (!args[2] || (!!args[2] && parseInt(args[2]) > todos.length - 1)) {
+                _sendMessage(context, MESSAGE_TYPES.text, `No invalid number provided.`);
+            } else {
+                if (secondArg === 'remove') {
+                    deleteTodo(parseInt(args[2]));
+                } else if (secondArg === 'check') {
+                    checkTodo(parseInt(args[2]));
+                } else {
+                    console.log('');
+                }
+                printTodos(context);
+            }
+        } else {
+            _sendMessage(context, MESSAGE_TYPES.text, `Invalid command`);
+        }
+    }
+});
+
+/**
+ * Auxiliaries
+ */
+const MESSAGE_TYPES = {text: 'text', sticker: 'sticker', html: 'html', photo: 'photo'};
+
+const _sendMessage = (context, type, message, options) => {
+    // if (context.chat.id === process.env.WEEBS_GROUP_ID) return;
+    
+    const now = new Date();
+    const isOlder = now.getTime() > context.message.date*1000;
+    if (isOlder) {
+        // context.reply('This message is older, ignored', Extra.inReplyTo(context.message.message_id));
+    } else {
+        switch (type) {
+            case MESSAGE_TYPES.text: context.reply(message); break;
+            case MESSAGE_TYPES.sticker: context.replyWithSticker(message); break;
+            case MESSAGE_TYPES.html: context.replyWithHTML(message); break;
+            case MESSAGE_TYPES.photo: context.replyWithPhoto(message); break;
+        }
+    }
+}
 
 /* begin bot */ bot.launch();
 
