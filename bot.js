@@ -156,9 +156,8 @@ const MESSAGE_TYPES = {text: 'text', sticker: 'sticker', html: 'html', photo: 'p
 
 const _sendMessage = (context, type, message, options) => {
     // if (context.chat.id === process.env.WEEBS_GROUP_ID) return;
-    
     const now = new Date();
-    const isOlder = now.getTime() > context.message.date*1000;
+    const isOlder = now.getTime() > (context.message.date * 1000 + 10000);
     if (isOlder) {
         // context.reply('This message is older, ignored', Extra.inReplyTo(context.message.message_id));
     } else {
