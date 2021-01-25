@@ -159,27 +159,6 @@ bot.command('nhentai', (context) => {
 // });
 
 /**
- * Auxiliaries
- */
-const MESSAGE_TYPES = {text: 'text', sticker: 'sticker', html: 'html', photo: 'photo'};
-
-const _sendMessage = (context, type, message, options) => {
-    // if (context.chat.id === process.env.WEEBS_GROUP_ID) return;
-    const now = new Date();
-    const isOlder = now.getTime() > (context.message.date * 1000 + 10000);
-    if (isOlder) {
-        // context.reply('This message is older, ignored', Extra.inReplyTo(context.message.message_id));
-    } else {
-        switch (type) {
-            case MESSAGE_TYPES.text: context.reply(message); break;
-            case MESSAGE_TYPES.sticker: context.replyWithSticker(message); break;
-            case MESSAGE_TYPES.html: context.replyWithHTML(message); break;
-            case MESSAGE_TYPES.photo: context.replyWithPhoto(message); break;
-        }
-    }
-}
-
-/**
  * Cool reaction system for automatically reply when trigger word
  * is read
  * 
