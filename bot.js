@@ -29,7 +29,7 @@ bot.help((context) => {
         {command: '/image', description: `random image.`},
         {command: '/sticker [reaction]', description: `random sticker unless reaction is given, See '/sticker list' for every sticker.`},
         {command: '/nhentai', description: `yyyyep.`},
-    ]
+    ];
     _sendMessage(context, MESSAGE_TYPES.text, `What are you, stupid? Here's what I can do:\n${help.map((item) => `- ${item.command}: ${item.description}`).join('\n')}`)
 })
 
