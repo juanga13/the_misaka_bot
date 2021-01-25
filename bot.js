@@ -9,6 +9,7 @@ dotenv.config();
 const token = process.env.TOKEN;
 const mal = new Jikan();
 const bot = new Telegraf(token);
+const {WHITELIST_IDS} = require('./whitelist');
 
 /**
  * TODO: commented because using it in other thing, uncomment!
@@ -237,22 +238,31 @@ bot.command('todo', (context) => {
         }
     }
 });
+/**
+ * Debug
+ */
+bot.command('id', (context) => {
+    _sendMessage(context, MESSAGE_TYPES.text, context.chat.id, {reply: true});
+});
 
 /**
  * Auxiliaries
  */
 const MESSAGE_TYPES = {text: 'text', sticker: 'sticker', html: 'html', photo: 'photo'};
 
-const _sendMessage = (context, type, message, options) => {
-    // if (context.chat.id === process.env.WEEBS_GROUP_ID) return;
-    
+const _sendMessage = (context, type, message, options=null) => {
+    console.log(WHITELIST_IDS)
+    if (!WHITELIST_IDS.find(({name, id}) => id === context.chat.id.toString())) return; // check if message comes from a whitelisted group
     const now = new Date();
     const isOlder = now.getTime() > (context.message.date*1000 + 10000);
     if (isOlder) {
         context.reply('This message is older, ignored', Extra.inReplyTo(context.message.message_id));
     } else {
         switch (type) {
-            case MESSAGE_TYPES.text: context.reply(message); break;
+            case MESSAGE_TYPES.text: 
+                if (options ? options.reply : false) context.reply(message, Extra.inReplyTo(context.message.message_id)); 
+                else context.reply(message);
+                break;
             case MESSAGE_TYPES.sticker: context.replyWithSticker(message); break;
             case MESSAGE_TYPES.html: context.replyWithHTML(message); break;
             case MESSAGE_TYPES.photo: context.replyWithPhoto(message); break;
