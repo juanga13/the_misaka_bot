@@ -256,7 +256,7 @@ const _sendMessage = (context, type, message, options=null) => {
     const now = new Date();
     const isOlder = now.getTime() > (context.message.date*1000 + 10000);
     if (isOlder) {
-        context.reply('This message is older, ignored', Extra.inReplyTo(context.message.message_id));
+        // context.reply('This message is older, ignored', Extra.inReplyTo(context.message.message_id));
     } else {
         switch (type) {
             case MESSAGE_TYPES.text: 
