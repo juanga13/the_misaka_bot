@@ -1,7 +1,7 @@
 {
-  "name": "telegram-the-misaka-bot",
+  "name": "the-misaka-bot",
   "version": "1.0.0",
-  "description": "",
+  "description": "- go to https://github.com/telegraf/telegraf - clone repo - change to v3 branch - go to this repo and do npm install ./telegraf/ - now ```const Extra = require('telegraf/extra');``` works",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -13,7 +13,16 @@
     "date-fns": "^2.16.1",
     "dotenv": "^8.2.0",
     "jikan-node": "^1.2.1",
-    "telegraf": "file:telegraf-v3",
+    "telegraf": "file:telegraf",
     "typescript": "^4.1.3"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/juanga13/the_misaka_bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/juanga13/the_misaka_bot/issues"
+  },
+  "homepage": "https://github.com/juanga13/the_misaka_bot#readme"
 }
