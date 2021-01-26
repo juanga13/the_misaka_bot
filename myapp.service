@@ -1,0 +1,14 @@
+[Unit]
+Description=Telegram bot misaka service to be always open :)
+
+[Service]
+ExecStart=/var/www/the-misaka-bot/bot.js
+Restart=always
+User=nobody
+Group=nogroup
+Enviroment=PATH=/usr/bin:/usr/local/bin
+Enviroment=NODE_END=production
+WorkingDirectory=/var/www/the-misaka-bot
+
+[Install]
+WantedBy=multi-user.target

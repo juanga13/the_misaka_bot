@@ -1,4 +1,10 @@
+# bot js
 /node_modules
 /dist
 /.vscode
 .env
+/telegraf
+/telegraf-v3
+
+# backend
+/backend/node_modules

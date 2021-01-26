@@ -238,6 +238,19 @@ bot.command('todo', (context) => {
         }
     }
 });
+
+/**
+ * Birthday command
+ */
+bot.command('birthday', (context) => {
+    const args = context.message.text.split(' ');
+    if (args.length === 1) {
+        _sendMessage(context, MESSAGE_TYPES.text, )
+    } else {
+
+    }
+})
+
 /**
  * Debug
  */
@@ -251,7 +264,6 @@ bot.command('id', (context) => {
 const MESSAGE_TYPES = {text: 'text', sticker: 'sticker', html: 'html', photo: 'photo'};
 
 const _sendMessage = (context, type, message, options=null) => {
-    console.log(WHITELIST_IDS)
     if (!WHITELIST_IDS.find(({name, id}) => id === context.chat.id.toString())) return; // check if message comes from a whitelisted group
     const now = new Date();
     const isOlder = now.getTime() > (context.message.date*1000 + 10000);
@@ -270,6 +282,14 @@ const _sendMessage = (context, type, message, options=null) => {
     }
 }
 
+const _getDatabaseData = () => {
+
+};
+
+/**
+ * Init
+ */
+/* load csv */
 /* begin bot */ bot.launch();
 
 /* f bot */

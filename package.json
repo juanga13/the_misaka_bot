@@ -10,9 +10,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "csv-parser": "^3.0.0",
+    "csv-writer": "^1.6.0",
+    "currently-airing-anime": "^0.6.3",
     "date-fns": "^2.16.1",
     "dotenv": "^8.2.0",
+    "fs": "0.0.1-security",
     "jikan-node": "^1.2.1",
+    "node-fetch": "^2.6.1",
     "telegraf": "file:telegraf",
     "typescript": "^4.1.3"
   },
