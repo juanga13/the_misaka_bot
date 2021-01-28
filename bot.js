@@ -11,6 +11,7 @@ const mal = new Jikan();
 const bot = new Telegraf(token);
 const {WHITELIST_IDS} = require('./whitelist');
 const controller = require('./controller');
+const { isValid } = require('date-fns');
 
 let data = {birthday: [], animeAiringUpdate: []};
 controller.read().then(res => data = res);
@@ -26,13 +27,14 @@ controller.read().then(res => data = res);
 
 bot.help((context) => {
     const help = [
-        {command: '/start', description: `just 'Welcome' text.`},
         {command: '/help', description: `this fukin message.`},
         {command: '/season', description: `this seasonal's animes.`},
         {command: '/lefo', description: `LEFO.`},
         {command: '/image', description: `random image.`},
         {command: '/sticker [reaction]', description: `random sticker unless reaction is given, See '/sticker list' for every sticker.`},
         {command: '/nhentai', description: `yyyyep.`},
+        {command: '/todo', description: `Todos list, show all actions with '/todo help'.`},
+        {command: '/birthday', description: `List of birthdays, show more actions with '/birthday help'.`},
     ];
     _sendMessage(context, MESSAGE_TYPES.text, `What are you, stupid? Here's what I can do:\n${help.map((item) => `- ${item.command}: ${item.description}`).join('\n')}`)
 })
@@ -223,6 +225,8 @@ bot.command('todo', (context) => {
                 }
                 printTodos(context);
             }
+        } else if (secondArg === 'help') {
+            _sendMessage(context, MESSAGE_TYPES.text, `/todo options (note: [text] is whatever goes next):\n\n- '/todo' show list of todos.\n- '/todo add [text]': adds a new unchecked todo.\n- '/todo check [number]' checks a todo, the number must match with one of the list provided. Note that uncheck is not possible.\n- '/todo remove [number]': removes a todo, the number must match with one of the list provided.`)
         } else {
             _sendMessage(context, MESSAGE_TYPES.text, `Invalid command`);
         }
@@ -232,16 +236,59 @@ bot.command('todo', (context) => {
 /**
  * Birthday system
  */
+
+const printBirthdays = (context) => _sendMessage(context, MESSAGE_TYPES.text, `All birthdays:\n${data.birthday.map((birthday, i) => `- ${i}. Name: ${birthday.name}, date: ${birthday.date}`).join('\n')}`)
 bot.command('birthday', (context) => {
     if (controller.isReading || controller.isWriting) _sendMessage(context, MESSAGE_TYPES.text, 'chotto matte');
     else {
-        const birthdays = _db_get('birthday');
         const args = context.message.text.split(' ');
-        console.log('birthday command', birthdays, args);
-        if (args.length === 1) {
-            _sendMessage(context, MESSAGE_TYPES.text, `All birthdays:\n${birthdays.map((birthday) => `- Name: ${birthday.name}, date: ${birthday.date}`).join('\n')}`)
-        } else {
-    
+        if (args.length === 1) printBirthdays(context);
+        else {
+            const secondArg = args[1];
+            switch (secondArg) {
+                case 'help':
+                    _sendMessage(context, MESSAGE_TYPES.text, `'/birthday' options:\n\n- '/birthday add [text] [date]': saves a new birthday, [text] will be everything until a number is found, and [date] needs to follow "DD/MM" pattern. Example: "/birthday add Jose Perez 01/01/1970".\n- '/birthday remove [number]': removes a birthday matching the number with the one provided in the list.`);
+                    break;
+                case 'add':
+                    const rest = args.slice(2).join(' ');
+                    let startOfDate = -1;
+                    for (var i = 0; i < rest.length; i++) {
+                        if (!isNaN(parseInt(rest[i])) && startOfDate === -1) startOfDate = i;
+                    }
+                    const name = rest.substring(0, startOfDate).trim();
+                    const date = rest.substring(startOfDate, rest.length);
+                    let isDateValid = true;
+                    if (date.length !== 5) isDateValid = false;
+                    else {
+                        for (var i = 0; i < date.length; i++) {
+                            if (i === 2) {
+                                if (date[i] !== '/') isDateValid = false;
+                            } else if (isNaN(parseInt(date[i]))) isDateValid = false;
+                        }
+                    }
+                    if (isDateValid) {
+                        const day = date.substring(0, 2) 
+                        const month = date.substring(3, 5);
+                        const monthLength = [ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 ];
+                        if (month < 1 || day < 1 || 
+                            month > monthLength.length ||
+                            day > monthLength[month - 1]) _sendMessage(context, MESSAGE_TYPES.text, `The date does not exist.`);
+                        else {
+                            _db_add_birthday(name, date);
+                            printBirthdays(context); 
+                        }
+                    } else _sendMessage(context, MESSAGE_TYPES.text, `The date does not match with pattern.`);
+                    break;
+                case 'remove':
+                    const index = parseInt(args[2]);
+                    if (isNaN(index) || data.birthday.length < index + 1) _sendMessage(context, MESSAGE_TYPES.text, `Invalid number.`);
+                    else {
+                        _db_remove_birthday(index);
+                        printBirthdays(context);
+                    }
+                    break;
+                default: break;
+            }
         }
     }
 })
@@ -287,12 +334,17 @@ const _sendMessage = (context, type, message, options=null) => {
  * Returns all data from a single "table"
  * @param { string } type -> birthday or animeAiringUpdate for now 
  */
-const _db_get = (type) => {
-    switch (type) {
-        case 'birthday': return Object.values(data.birthday);
-        case 'animeAiringUpdate': return Object.values(data.animeAiringUpdate);
-        default: console.log('[db_get] invalid type'); return [];
-    }
+const _db_add_birthday = (name, date) => {
+    const newData = {...data, birthday: [...data.birthday, {name, date}]}
+    data = newData;
+};
+const _db_remove_birthday = (index) => {
+    const newData = {...data, birthday: data.birthday.filter((birthday, i) => i !== index)}
+    data = newData;
+};
+const _db_add_animeAiringUpdate = (name, lastEpisode, malId) => {
+    const newData = {...data, animeAiringUpdate: [...data.animeAiringUpdate, {name, lastEpisode, malId}]}
+    data = newData;
 };
 
 
