@@ -3,14 +3,17 @@ const {Telegraf} = require('telegraf');
 const Extra = require('telegraf/extra');
 const Jikan = require('jikan-node');
 const dotenv = require('dotenv');
-dotenv.config();
 
 /* instances */
+dotenv.config();
 const token = process.env.TOKEN;
 const mal = new Jikan();
 const bot = new Telegraf(token);
 const {WHITELIST_IDS} = require('./whitelist');
+const controller = require('./controller');
 
+let data = {birthday: [], animeAiringUpdate: []};
+controller.read().then(res => data = res);
 /**
  * TODO: commented because using it in other thing, uncomment!
  * Simple message for when start using the bot, maybe add
@@ -34,6 +37,7 @@ bot.help((context) => {
     _sendMessage(context, MESSAGE_TYPES.text, `What are you, stupid? Here's what I can do:\n${help.map((item) => `- ${item.command}: ${item.description}`).join('\n')}`)
 })
 
+bot.command('asd', (context) => _sendMessage(context, MESSAGE_TYPES.text, 'hi', {reply: true}))
 /**
  * The only useful command actually.
  * 
@@ -82,21 +86,6 @@ bot.command('season', (context) => {
 bot.command('lefo', (context) => {
     _sendMessage(context, MESSAGE_TYPES.html, `<b>LEFO</b>`)
 })
-
-/**
- * First version of image sender
- * Tried to make always-new image from api but it doesnt work. Also
- * I dont have any usage ideas for images so 
- */
-let listenImages = true; let imageCount = 0;
-bot.command('image', (context) => {
-    if (listenImages) {
-        _sendMessage(context, MESSAGE_TYPES.photo, `https://picsum.photos/20${imageCount}/20${imageCount}/`);
-        imageCount += 1;            
-        listenImages = false;
-        setTimeout(() => {listenImages = true}, 10000);
-    }
-});
 
 /**
  * First version of sticker sender
@@ -198,6 +187,7 @@ bot.command('nhentai', (context) => {
 //     }
 // });
 
+
 let todos = [];
 const createTodo = (text) => todos.push({text, checked: false});
 const deleteTodo = (number) => {todos = todos.filter((todo, i) => i !== number)};
@@ -240,26 +230,26 @@ bot.command('todo', (context) => {
 });
 
 /**
- * Birthday command
+ * Birthday system
  */
 bot.command('birthday', (context) => {
-    const args = context.message.text.split(' ');
-    if (args.length === 1) {
-        _sendMessage(context, MESSAGE_TYPES.text, )
-    } else {
-
+    if (controller.isReading || controller.isWriting) _sendMessage(context, MESSAGE_TYPES.text, 'chotto matte');
+    else {
+        const birthdays = _db_get('birthday');
+        const args = context.message.text.split(' ');
+        console.log('birthday command', birthdays, args);
+        if (args.length === 1) {
+            _sendMessage(context, MESSAGE_TYPES.text, `All birthdays:\n${birthdays.map((birthday) => `- Name: ${birthday.name}, date: ${birthday.date}`).join('\n')}`)
+        } else {
+    
+        }
     }
 })
 
 /**
- * Debug
- */
-bot.command('id', (context) => {
-    _sendMessage(context, MESSAGE_TYPES.text, context.chat.id, {reply: true});
-});
-
-/**
- * Auxiliaries
+ * Auxiliaries, includes:
+ * <> _sendMessage -> every sending intentions to any chat should call this.
+ * <> _db_get -> gets a table of the database as list of objects
  */
 const MESSAGE_TYPES = {text: 'text', sticker: 'sticker', html: 'html', photo: 'photo'};
 
@@ -275,23 +265,75 @@ const _sendMessage = (context, type, message, options=null) => {
                 if (options ? options.reply : false) context.reply(message, Extra.inReplyTo(context.message.message_id)); 
                 else context.reply(message);
                 break;
-            case MESSAGE_TYPES.sticker: context.replyWithSticker(message); break;
-            case MESSAGE_TYPES.html: context.replyWithHTML(message); break;
-            case MESSAGE_TYPES.photo: context.replyWithPhoto(message); break;
+            case MESSAGE_TYPES.sticker:
+                if (options ? options.reply : false) context.replyWithSticker(message, Extra.inReplyTo(context.message.message_id)); 
+                else context.replyWithSticker(message);
+                break;
+            case MESSAGE_TYPES.html:
+                if (options ? options.reply : false) context.replyWithHTML(message, Extra.inReplyTo(context.message.message_id)); 
+                else context.replyWithHTML(message);
+                break;
+            case MESSAGE_TYPES.photo:
+                if (options ? options.reply : false) context.replyWithPhoto(message, Extra.inReplyTo(context.message.message_id)); 
+                else context.replyWithPhoto(message);
+                break;
+
+            default: break;
         }
     }
 }
 
-const _getDatabaseData = () => {
-
+/**
+ * Returns all data from a single "table"
+ * @param { string } type -> birthday or animeAiringUpdate for now 
+ */
+const _db_get = (type) => {
+    switch (type) {
+        case 'birthday': return Object.values(data.birthday);
+        case 'animeAiringUpdate': return Object.values(data.animeAiringUpdate);
+        default: console.log('[db_get] invalid type'); return [];
+    }
 };
 
-/**
- * Init
- */
-/* load csv */
-/* begin bot */ bot.launch();
 
-/* f bot */
-process.once('SIGINT', () => bot.stop('SIGINT'))
-process.once('SIGTERM', () => bot.stop('SIGTERM'))
+/** ============================================================
+ * Miscellaneus, mostly temporal
+ ============================================================ */
+bot.command('id', (context) => {
+    _sendMessage(context, MESSAGE_TYPES.text, context.chat.id, {reply: true});
+});
+let listenImages = true; let imageCount = 0;
+bot.command('image', (context) => {
+    if (listenImages) {
+        _sendMessage(context, MESSAGE_TYPES.photo, `https://picsum.photos/20${imageCount}/20${imageCount}/`);
+        imageCount += 1;            
+        listenImages = false;
+        setTimeout(() => {listenImages = true}, 10000);
+    }
+});
+
+
+
+/** ============================================================
+ * Init
+ ============================================================ */
+bot.launch();
+ 
+
+/** ============================================================
+ * On terminate calls
+ ============================================================ */
+const saveProgress = () => {
+    if (controller.isReading || controller.isWriting) setTimeout(saveProgress, 300);
+    else controller.write(data);
+}
+process.once('SIGINT', () => {
+    console.log('SIGINT under action');
+    saveProgress();
+    bot.stop('SIGINT');
+})
+process.once('SIGTERM', () => {
+    console.log('SIGTERM under action');
+    saveProgress();
+    bot.stop('SIGTERM');
+})

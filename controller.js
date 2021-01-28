@@ -37,52 +37,7 @@ const TABLE_TYPES = {BIRTHDAY: 'birthday', ANIME_AIRING: 'animeAiringUpdate'};
 
 class DataController {
     constructor() {
-        this.reader = require('csv-parser');
-        this.fs = require('fs');
-        this.writer = require('csv-writer');
-    }
-
-    read() {
-
-    }
-
-    write() {
-
-    }
-};
-
-
-/* demo csv */
-const data = [
-    {
-        table: TABLE_TYPES.BIRTHDAY,
-        name: 'Juanga',
-        date: '15/06/1998',
-        lastEpisode: '',
-        malId: '',
-    }, {
-        table: TABLE_TYPES.BIRTHDAY,
-        name: 'Ivo',
-        date: '19/04/1998',
-        lastEpisode: '',
-        malId: '',
-    }, {
-        table: TABLE_TYPES.ANIME_AIRING,
-        name: '(csv_test) Shingeki no kyojin The Final Season',
-        date: '',
-        lastEpisode: '3',
-        malId: '123456',
-    }, {
-        table: TABLE_TYPES.ANIME_AIRING,
-        name: '(csv_test) One Piece',
-        date: '',
-        lastEpisode: '999999',
-        malId: '654321',
-    },
-];
-
-class DemoController {
-    constructor() {
+        this.isReading, this.isWriting = false;
         this.csvWriter = createCsvWriter({
             path: 'data.csv',
             header: [
@@ -95,43 +50,62 @@ class DemoController {
         });
     }
 
-    getWrittenDemo() {
-        return this.writtenDemo;
+    getState() {
+        return (this.isReading || this.isWriting);
     }
 
-    write() {
-        this.writtenDemo = false;
+    write(newData) {
+        console.log('[Controller] Started writing data'); this.isWriting = true;
+        const newCsv = [
+            ...Object.values(newData.birthday).map(({name, date}) => ({
+                table: 'birthday', name, date,
+                lastEpisode: '', malId: ''
+            })),
+            ...Object.values(newData.animeAiringUpdate).map(({name, lastEpisode, malId}) => ({
+                table: 'animeAiringUpdate', name, lastEpisode, malId,
+                date: '',
+            }))
+        ];
         this.csvWriter
-            .writeRecords(data)
+            .writeRecords(newCsv)
             .then(() => {
-                this.writtenDemo = true;
-                console.log('demo yey');
+                console.log('[Controller] Ended writing data'); this.isWriting = false;
             });
     }
 
     read() {
-        console.log('=========================================');
+        console.log('[Controller] Started reading data.'); this.isReading = true;
         let result = {
             birthday: [],
             animeAiringUpdate: [],
         };
-        fs.createReadStream('data.csv')
-            .pipe(csv())
-            .on('data', (row) => {
-                const {table, name, date, lastEpisode, malId} = row;
-                switch (table) {
-                    case TABLE_TYPES.BIRTHDAY: result = ({...result, birthday: result.birthday.concat([{name, date}])}); break;
-                    case TABLE_TYPES.ANIME_AIRING: result = {...result, animeAiringUpdate: result.animeAiringUpdate.concat([{name, lastEpisode, malId}])}; break;
-                    default: break;
-                }
-            })
-            .on('end', () => {
-                console.log('=========================================');
-            });
-        console.log(result);
+        return new Promise((resolve, reject) => {
+            fs.createReadStream('data.csv')
+                .pipe(csv())
+                .on('data', (row) => {
+                    const {table, name, date, lastEpisode, malId} = row;
+                    switch (table) {
+                        case TABLE_TYPES.BIRTHDAY: 
+                            result = ({...result, birthday: [...result.birthday, {name, date}]});
+                            console.log('birthday', {name, date}, result);
+                            break;
+                        case TABLE_TYPES.ANIME_AIRING:
+                            result = {...result, animeAiringUpdate: [...result.animeAiringUpdate, {name, lastEpisode, malId}]};
+                            console.log('animeAiringUpdate', {name, date}, result);
+                            break;
+    
+                        default: break;
+                    }
+                })
+                .on('end', () => {
+                    console.log('[Controller] Ended reading data');  this.isReading = false;
+                    console.log(result);
+                    resolve(result)
+                });
+        });
+        return result;
     }
 }
 
-const demo = new DemoController();
-demo.write();
-demo.read();
+
+module.exports = new DataController();
