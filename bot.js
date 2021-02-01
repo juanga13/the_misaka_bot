@@ -330,6 +330,36 @@ const _sendMessage = (context, type, message, options=null) => {
     }
 }
 
+// 01/05 -> day=0; month=4
+const _parseBirthday = (birthday) => {
+    const day = parseInt(birthday.substring(0, 2));
+    const month = parseInt(birthday.substring(3, 5)) - 1;
+    return {day, month};
+};
+
+let ROUTINARY_CHECK_CONFIG = {
+    enable: true,
+    timeout: 3600000,  // 1 hour
+    // timeout: 10000,
+    birthday: {hourToNofiy: 17},
+    testId: WHITELIST_IDS[0].id,
+};
+const routinaryCheck = () => setInterval(async () => {
+    console.log('[Bot] This is routinary check.');
+
+    /* Check for birthdays */
+    const now = new Date();
+    const doNotifyNow = now.getHours() === ROUTINARY_CHECK_CONFIG.birthday.hourToNofiy; // only check our because timeout is 1 hour.
+    data.birthday.forEach((birthday) => {
+        const {day, month} = _parseBirthday(birthday.date);
+        if (now.getMonth() === month && now.getDate() === day && doNotifyNow) {
+            bot.telegram.sendMessage(ROUTINARY_CHECK_CONFIG.testId, `Happy birthday ${birthday.name}!!`);
+        }
+    });
+}, ROUTINARY_CHECK_CONFIG.timeout);
+
+routinaryCheck();
+
 /**
  * Returns all data from a single "table"
  * @param { string } type -> birthday or animeAiringUpdate for now 
@@ -363,7 +393,6 @@ bot.command('image', (context) => {
         setTimeout(() => {listenImages = true}, 10000);
     }
 });
-
 
 
 /** ============================================================
