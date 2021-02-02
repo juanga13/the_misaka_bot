@@ -154,31 +154,6 @@ bot.command('nhentai', (context) => {
     // }, 1000)    
 // });
 
-/**
- * Cool reaction system for automatically reply when trigger word
- * is read
- * 
- * {triggerText, type, content}
- */
-const reactionTypes = {
-    text: 'text',
-    randomText: 'random_text',
-    sticker: 'sticker',
-    image: 'image',
-};
-const reactions = [
-    {keyword: /(a{9})+/, isRegex: true, type: MESSAGE_TYPES.text, message: 'AAAAAAAAAA', reply: false},
-    {keyword: /(8|ocho)$/, isRegex: true, type: MESSAGE_TYPES.text, message: 'El culo te abrocho', options: {reply: true}},
-    {keyword: /(9|nueve)$/, isRegex: true, type: MESSAGE_TYPES.text, message: 'El culo te llueve', options: {reply: true}},
-];
-bot.on('text', (context) => {
-    const msg = context.message.text.toString().toLowerCase();
-    const reaction = reactions.find((reaction) => {
-        if (reaction.isRegex && reaction.keyword.test(msg)) return true
-        else return msg === reaction.keyword;
-    });
-    if (!!reaction) _sendMessage(context, reaction.type, reaction.message, reaction.options);
-});
 
 
 let todos = [];
@@ -230,6 +205,7 @@ bot.command('todo', (context) => {
 
 const printBirthdays = (context) => _sendMessage(context, MESSAGE_TYPES.text, `All birthdays:\n${data.birthday.map((birthday, i) => `- ${i}. Name: ${birthday.name}, date: ${birthday.date}`).join('\n')}`)
 bot.command('birthday', (context) => {
+    console.log('[Bot] Birthday command entered')
     if (controller.isReading || controller.isWriting) _sendMessage(context, MESSAGE_TYPES.text, 'chotto matte');
     else {
         const args = context.message.text.split(' ');
@@ -285,6 +261,31 @@ bot.command('birthday', (context) => {
 })
 
 /**
+ * Cool reaction system for automatically reply when trigger word
+ * is read
+ * 
+ * {triggerText, type, content}
+ */
+const reactionTypes = {
+    text: 'text',
+    randomText: 'random_text',
+    sticker: 'sticker',
+    image: 'image',
+};
+const reactions = [
+    {keyword: /(a{9})+/, isRegex: true, type: MESSAGE_TYPES.text, message: 'AAAAAAAAAA', reply: false},
+    {keyword: /(8|ocho)$/, isRegex: true, type: MESSAGE_TYPES.text, message: 'El culo te abrocho', options: {reply: true}},
+    {keyword: /(9|nueve)$/, isRegex: true, type: MESSAGE_TYPES.text, message: 'El culo te llueve', options: {reply: true}},
+];
+bot.on('text', (context) => {
+    const msg = context.message.text.toString().toLowerCase();
+    const reaction = reactions.find((reaction) => {
+        if (reaction.isRegex && reaction.keyword.test(msg)) return true
+        else return msg === reaction.keyword;
+    });
+    if (!!reaction) _sendMessage(context, reaction.type, reaction.message, reaction.options);
+});
+/**
  * Auxiliaries, includes:
  * <> _sendMessage -> every sending intentions to any chat should call this.
  * <> _db_get -> gets a table of the database as list of objects
@@ -335,17 +336,22 @@ let ROUTINARY_CHECK_CONFIG = {
     testId: WHITELIST_IDS[0].id,
 };
 const routinaryCheck = () => setInterval(async () => {
-    console.log('[Bot] This is routinary check.');
+    console.log('========== [Bot] This is routinary check. ==========');
 
     /* Check for birthdays */
     const now = new Date();
     const doNotifyNow = now.getHours() === ROUTINARY_CHECK_CONFIG.birthday.hourToNofiy; // only check our because timeout is 1 hour.
+    console.log(`--> [Bot/birthdays] Begun check`)
     data.birthday.forEach((birthday) => {
         const {day, month} = _parseBirthday(birthday.date);
-        if (now.getMonth() === month && now.getDate() === day && doNotifyNow) {
+        const isToday = now.getMonth() === month && now.getDate() === day;
+        console.log(`\t-> [Bot/birthdays] Is ${birthday.name}'s birthday today (${birthday.date})? -> ${isToday ? 'yes' : 'no'}`)
+        if (isToday && doNotifyNow) {
             bot.telegram.sendMessage(ROUTINARY_CHECK_CONFIG.testId, `Happy birthday ${birthday.name}!!`);
         }
     });
+    console.log(`--> [Bot/birthdays] Finished check`);
+    console.log('========== [Bot] Ended routinary check. ==========');
 }, ROUTINARY_CHECK_CONFIG.timeout);
 
 routinaryCheck();
