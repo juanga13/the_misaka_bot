@@ -13,6 +13,10 @@ const {WHITELIST_IDS} = require('./whitelist');
 const controller = require('./controller');
 const { isValid } = require('date-fns');
 
+
+const MESSAGE_TYPES = {text: 'text', sticker: 'sticker', html: 'html', photo: 'photo'};
+
+
 let data = {birthday: [], animeAiringUpdate: []};
 controller.read().then(res => data = res);
 /**
@@ -156,38 +160,25 @@ bot.command('nhentai', (context) => {
  * 
  * {triggerText, type, content}
  */
-// const reactionTypes = {
-//     text: 'text',
-//     randomText: 'random_text',
-//     sticker: 'sticker',
-//     image: 'image',
-// };
-// const reactions = {
-//     'misakaTest': {type: reactionTypes.randomText, content: `I'm Misaka`},
-// };
-// bot.on('text', (context) => {
-//     const reaction = reactions[context.message.text.toString()];
-//     // context.reply(context.chat.id);
-//     // if (context.chat.id.toString() === '-449065093') context.reply('Grupo de weebs de mierda');
-//     // context.reply(`Message: ${context.message.text}. Match: ${!reaction ? 'no matches' : `[type: ${reaction.type}, content: ${reaction.content}]`}.`)
-//     if (!reaction) return;
-//     console.log(reaction.type);
-//     switch (reaction.type) {
-//         case reactionTypes.text:
-//             return context.reply(reaction.content)    
-//             break;
-//         case reactionTypes.randomText:
-//             // context.reply(reactions[context.message.text].content)    
-//             break;
-//         case reactionTypes.sticker:
-//             // context.replyWithSticker(reactions[context.message.text].content)    
-//             break;
-//         case reactionTypes.image:
-//             // context.replyWithImage(reactions[context.message.text].content)    
-//             break;
-//         default: break;
-//     }
-// });
+const reactionTypes = {
+    text: 'text',
+    randomText: 'random_text',
+    sticker: 'sticker',
+    image: 'image',
+};
+const reactions = [
+    {keyword: /(a{9})+/, isRegex: true, type: MESSAGE_TYPES.text, message: 'AAAAAAAAAA', reply: false},
+    {keyword: /(8|ocho)$/, isRegex: true, type: MESSAGE_TYPES.text, message: 'El culo te abrocho', options: {reply: true}},
+    {keyword: /(9|nueve)$/, isRegex: true, type: MESSAGE_TYPES.text, message: 'El culo te llueve', options: {reply: true}},
+];
+bot.on('text', (context) => {
+    const msg = context.message.text.toString().toLowerCase();
+    const reaction = reactions.find((reaction) => {
+        if (reaction.isRegex && reaction.keyword.test(msg)) return true
+        else return msg === reaction.keyword;
+    });
+    if (!!reaction) _sendMessage(context, reaction.type, reaction.message, reaction.options);
+});
 
 
 let todos = [];
@@ -298,7 +289,6 @@ bot.command('birthday', (context) => {
  * <> _sendMessage -> every sending intentions to any chat should call this.
  * <> _db_get -> gets a table of the database as list of objects
  */
-const MESSAGE_TYPES = {text: 'text', sticker: 'sticker', html: 'html', photo: 'photo'};
 
 const _sendMessage = (context, type, message, options=null) => {
     if (!WHITELIST_IDS.find(({name, id}) => id === context.chat.id.toString())) return; // check if message comes from a whitelisted group
