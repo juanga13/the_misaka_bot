@@ -378,7 +378,7 @@ const _db_add_animeAiringUpdate = (name, lastEpisode, malId) => {
  * Miscellaneus, mostly temporal
  ============================================================ */
 bot.command('id', (context) => {
-    _sendMessage(context, MESSAGE_TYPES.text, context.chat.id, {reply: true});
+    context.reply(context.chat.id);
 });
 let listenImages = true; let imageCount = 0;
 bot.command('image', (context) => {
