@@ -321,6 +321,22 @@ const _sendMessage = (context, type, message, options=null) => {
     }
 }
 
+/** ============================================================
+ * Miscellaneus, mostly temporal
+ ============================================================ */
+ bot.command('id', (context) => {
+    context.reply(context.chat.id);
+});
+let listenImages = true; let imageCount = 0;
+bot.command('image', (context) => {
+    if (listenImages) {
+        _sendMessage(context, MESSAGE_TYPES.photo, `https://picsum.photos/20${imageCount}/20${imageCount}/`);
+        imageCount += 1;            
+        listenImages = false;
+        setTimeout(() => {listenImages = true}, 10000);
+    }
+});
+
 // 01/05 -> day=0; month=4
 const _parseBirthday = (birthday) => {
     const day = parseInt(birthday.substring(0, 2));
@@ -373,22 +389,6 @@ const _db_add_animeAiringUpdate = (name, lastEpisode, malId) => {
     data = newData;
 };
 
-
-/** ============================================================
- * Miscellaneus, mostly temporal
- ============================================================ */
-bot.command('id', (context) => {
-    context.reply(context.chat.id);
-});
-let listenImages = true; let imageCount = 0;
-bot.command('image', (context) => {
-    if (listenImages) {
-        _sendMessage(context, MESSAGE_TYPES.photo, `https://picsum.photos/20${imageCount}/20${imageCount}/`);
-        imageCount += 1;            
-        listenImages = false;
-        setTimeout(() => {listenImages = true}, 10000);
-    }
-});
 
 
 /** ============================================================
