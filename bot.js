@@ -3,6 +3,7 @@ const {Telegraf} = require('telegraf');
 const Extra = require('telegraf/extra');
 const Jikan = require('jikan-node');
 const dotenv = require('dotenv');
+const gitCommitCount = require('git-commit-count');
 
 /* instances */
 dotenv.config();
@@ -12,6 +13,8 @@ const bot = new Telegraf(token);
 const {WHITELIST_IDS} = require('./whitelist');
 const controller = require('./controller');
 const { isValid } = require('date-fns');
+const version = `${process.env.MAJOR_VERSION}.${gitCommitCount()}`;  // great, major version + commit B) will need to change later if version goes to 2 and commits still N yep
+
 
 
 const MESSAGE_TYPES = {text: 'text', sticker: 'sticker', html: 'html', photo: 'photo'};
@@ -346,8 +349,8 @@ const _parseBirthday = (birthday) => {
 
 let ROUTINARY_CHECK_CONFIG = {
     enable: true,
-    timeout: 3600000,  // 1 hour
-    // timeout: 10000,
+    // timeout: 3600000,  // 1 hour
+    timeout: 100000,
     birthday: {hourToNofiy: 17},
     testId: WHITELIST_IDS[0].id,
 };
@@ -370,7 +373,6 @@ const routinaryCheck = () => setInterval(async () => {
     console.log('========== [Bot] Ended routinary check. ==========');
 }, ROUTINARY_CHECK_CONFIG.timeout);
 
-routinaryCheck();
 
 /**
  * Returns all data from a single "table"
@@ -394,6 +396,8 @@ const _db_add_animeAiringUpdate = (name, lastEpisode, malId) => {
 /** ============================================================
  * Init
  ============================================================ */
+console.log(`Launching the_misaka_bot - version ${version}`)
+routinaryCheck();
 bot.launch();
  
 

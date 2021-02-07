@@ -22,7 +22,14 @@
     - when suscribed to an unstarted anime, send news until is airing, then notify new chapters.
 - ```/manga``` same as /anime but probably it wont have very nice apis, need to investigate that.
 
+
 ## personal notes
+
+### .env variables
+TOKEN: token needed to run any telegram bot lol.
+WEEBS_GROUP_ID: private id (not used currently).
+MAJOR_VERSION: differentiate major version, as its important i decided to place it here just because.
+
 ### install telegraf v3
 
 - go to https://github.com/telegraf/telegraf
