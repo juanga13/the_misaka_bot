@@ -397,7 +397,7 @@ const _db_add_animeAiringUpdate = (name, lastEpisode, malId) => {
  * Init
  ============================================================ */
 console.log(`Launching the_misaka_bot - version ${version}`)
-routinaryCheck();
+// routinaryCheck(); DISABLING IT BECAUSE FOR SOME REASON TELEGRAF CANT USE AWAIT ASYNC SHIT
 bot.launch();
  
 
