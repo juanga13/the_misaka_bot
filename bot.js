@@ -157,11 +157,6 @@ bot.command('nhentai', (context) => {
 // });
 
 
-
-let todos = [];
-const createTodo = (text) => todos.push({text, checked: false});
-const deleteTodo = (number) => {todos = todos.filter((todo, i) => i !== number)};
-const checkTodo = (number) => {todos[number] = {...todos[number], checked: true}};
 const printTodos = (context) => _sendMessage(
     context,
     MESSAGE_TYPES.text,
@@ -177,7 +172,7 @@ bot.command('todo', (context) => {
             if (!args[2]) {
                 _sendMessage(context, MESSAGE_TYPES.text, `Cannot add empty todo.`);
             } else {
-                createTodo(args.slice(2).join(' '));
+                DB._db_add_todo(context.chat.id, args.slice(2).join(' '));
                 printTodos(context);
             }
         } else if (secondArg === 'remove' || secondArg === 'check') {
@@ -185,9 +180,9 @@ bot.command('todo', (context) => {
                 _sendMessage(context, MESSAGE_TYPES.text, `No invalid number provided.`);
             } else {
                 if (secondArg === 'remove') {
-                    deleteTodo(parseInt(args[2]));
+                    DB._db_remove_todo(context.chat.id, parseInt(args[2]));
                 } else if (secondArg === 'check') {
-                    checkTodo(parseInt(args[2]));
+                    DB._db_check_todo(context.chat.id, parseInt[2]);
                 } else {
                     console.log('');
                 }
@@ -275,7 +270,11 @@ const reactionTypes = {
     image: 'image',
 };
 const reactions = [
-    {keyword: /(a{9})+/, isRegex: true, type: MESSAGE_TYPES.text, message: 'AAAAAAAAAA', reply: false},
+    {keyword: /^(a{5})+/, isRegex: true, type: MESSAGE_TYPES.text, message: (msg) => {
+        const adding = Math.floor(Math.random() * msg.length);
+        const final =  (msg + `A`.repeat(adding));
+        return final;
+    }, reply: false, isFunction: true},
     {keyword: /(8|ocho)$/, isRegex: true, type: MESSAGE_TYPES.text, message: 'El culo te abrocho', options: {reply: true}},
     {keyword: /(9|nueve)$/, isRegex: true, type: MESSAGE_TYPES.text, message: 'El culo te llueve', options: {reply: true}},
 ];
@@ -285,7 +284,10 @@ bot.on('text', (context) => {
         if (reaction.isRegex && reaction.keyword.test(msg)) return true
         else return msg === reaction.keyword;
     });
-    if (!!reaction) _sendMessage(context, reaction.type, reaction.message, reaction.options);
+    if (!!reaction) {
+        if (reaction.isFunction) _sendMessage(context, reaction.type, reaction.message(msg), reaction.options);
+        else _sendMessage(context, reaction.type, reaction.message, reaction.options);
+    }
 });
 /**
  * Auxiliaries, includes:
@@ -418,6 +420,83 @@ class DB {
                     ...data.animeAiringUpdate,
                     {name, lastEpisode, malId}
                 ]
+            }
+        };
+        console.log(data, newData);
+        data = newData;
+    };/**
+     * Todoes
+     */
+    static _db_add_todo = (chatId, text) => {
+        const newData = {
+            ...data,
+            [chatId]: {
+                ...data[chatId],
+                todos: [
+                    ...data[chatId].todos,
+                    {text, checked: false},
+                ]
+            }
+        };
+        console.log(data, newData);
+        data = newData;
+    };
+    static _db_check_todo = (chatId, index) => {
+        const newData = {
+            ...data,
+            [chatId]: {
+                ...data[chatId],
+                todos: data.todos.map((todo, i) => i === index ? {text: todo.text, checked: true} : todo)
+            }
+        };
+        console.log(data, newData);
+        data = newData;
+    };
+    static _db_remove_todo = (chatId, index) => {
+        const newData = {
+            ...data,
+            [chatId]: {
+                ...data[chatId],
+                todos: data.todos.map((todo, i) => i !== index)
+            }
+        };
+        console.log(data, newData);
+        data = newData;
+    };
+    /**
+     * Todoes
+     */
+    static _db_add_todo = (chatId, text) => {
+        const newData = {
+            ...data,
+            [chatId]: {
+                ...data[chatId],
+                todos: [
+                    ...data[chatId].todos,
+                    {text, checked: false},
+                ]
+            }
+        };
+        console.log(data, newData);
+        data = newData;
+    };
+    static _db_check_todo = (chatId, index) => {
+        const newData = {
+            ...data,
+            [chatId]: {
+                ...data[chatId],
+                todos: data.todos.map((todo, i) => i === index ? {text: todo.text, checked: true} : todo)
+            }
+        };
+        console.log(data, newData);
+        data = newData;
+    };
+    static _db_remove_todo = (chatId, index) => {
+        const newData = {
+            ...data,
+            [chatId]: {
+                ...data[chatId],
+                todos: data.todos.map((todo, i) => i !== index)
             }
         };
         console.log(data, newData);

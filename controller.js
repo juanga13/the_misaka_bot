@@ -11,11 +11,13 @@ const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const csvWriter = createCsvWriter({
     path: 'data.csv',
     header: [
-        {id: 'table', title: 'Table'},
-        {id: 'name', title: 'Name'},
-        {id: 'date', title: 'Date'},
-        {id: 'lastEpisode', title: 'Last Episode'},
-        {id: 'malId', title: 'MAL id'},
+        /* ID*/ {id: 'table', title: 'Table'},
+        /* BIRTHDAY | ANIME*/ {id: 'name', title: 'Name'},
+        /* BIRTHDAY*/ {id: 'date', title: 'Date'},
+        /* ANIME*/ {id: 'lastEpisode', title: 'Last Episode'},
+        /* ANIME*/ {id: 'malId', title: 'MAL id'},
+        /* TODOS */ {id: 'text', title: 'Todo content'},
+        /* TODOS */ {id: 'checked', title: 'Todo checked'},
     ]
 });
 /*
@@ -46,6 +48,8 @@ class DataController {
                 {id: 'date', title: 'date'},
                 {id: 'lastEpisode', title: 'lastEpisode'},
                 {id: 'malId', title: 'malId'},
+                {id: 'text', title: 'Todo content'},
+                {id: 'checked', title: 'Todo checked'},
             ]
         });
     }
@@ -59,12 +63,16 @@ class DataController {
         const newCsv = [
             ...Object.values(newData.birthday).map(({name, date}) => ({
                 table: 'birthday', name, date,
-                lastEpisode: '', malId: ''
+                lastEpisode: '', malId: '', text: '', checked: '',
             })),
             ...Object.values(newData.animeAiringUpdate).map(({name, lastEpisode, malId}) => ({
                 table: 'animeAiringUpdate', name, lastEpisode, malId,
-                date: '',
-            }))
+                date: '', text: '', checked: '',
+            })),
+            ...Object.values(newData.todos).map(({text, checked}) => ({
+                table: 'todos', text, checked,
+                name: '', lastEpisode: '', malId: '', date: '',
+            })),
         ];
         this.csvWriter
             .writeRecords(newCsv)
@@ -78,12 +86,13 @@ class DataController {
         let result = {
             birthday: [],
             animeAiringUpdate: [],
+            todos: [],
         };
         return new Promise((resolve, reject) => {
             fs.createReadStream('data.csv')
                 .pipe(csv())
                 .on('data', (row) => {
-                    const {table, name, date, lastEpisode, malId} = row;
+                    const {table, name, date, lastEpisode, malId, text, checked} = row;
                     switch (table) {
                         case TABLE_TYPES.BIRTHDAY: 
                             result = ({...result, birthday: [...result.birthday, {name, date}]});
@@ -92,6 +101,9 @@ class DataController {
                         case TABLE_TYPES.ANIME_AIRING:
                             result = {...result, animeAiringUpdate: [...result.animeAiringUpdate, {name, lastEpisode, malId}]};
                             console.log('animeAiringUpdate', {name, date}, result);
+                            break;
+                        case TABLE_TYPES.TODOS:
+
                             break;
     
                         default: break;
