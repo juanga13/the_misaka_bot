@@ -157,11 +157,12 @@ bot.command('nhentai', (context) => {
 // });
 
 
-const printTodos = (context) => _sendMessage(
-    context,
-    MESSAGE_TYPES.text,
-    `Todos:${todos.length === 0 ? ' no todos.' : (todos.map((todo, i) => `\n${i}. [${todo.checked ? 'x' : ' '}] ${todo.text}.`))}`
-);
+const printTodos = (context) => {
+    const todos = data[context.chat.id] ? data[context.chat.id].todos : [];
+    _sendMessage(context, MESSAGE_TYPES.text,
+        `Todos:${todos.length === 0 ? ' no todos.' : (todos.map((todo, i) => `\n${i}. [${todo.checked ? 'x' : ' '}] ${todo.text}.`))}`
+    )
+};
 bot.command('todo', (context) => {
     const args = context.message.text.split(' ');
     if (args.length === 1) {
@@ -176,15 +177,16 @@ bot.command('todo', (context) => {
                 printTodos(context);
             }
         } else if (secondArg === 'remove' || secondArg === 'check') {
-            if (!args[2] || (!!args[2] && parseInt(args[2]) > todos.length - 1)) {
+            const todos = data[context.chat.id] ? data[context.chat.id].todos : undefined;
+            if (!todos) {
+                _sendMessage(context, MESSAGE_TYPES.text, `No todos to ${secondArg === 'remove' ? 'remove' : 'check'}.`);
+            } else if (!args[2] || (!!args[2] && parseInt(args[2]) > todos.length - 1)) {
                 _sendMessage(context, MESSAGE_TYPES.text, `No invalid number provided.`);
             } else {
                 if (secondArg === 'remove') {
                     DB._db_remove_todo(context.chat.id, parseInt(args[2]));
                 } else if (secondArg === 'check') {
-                    DB._db_check_todo(context.chat.id, parseInt[2]);
-                } else {
-                    console.log('');
+                    DB._db_check_todo(context.chat.id, parseInt(args[2]));
                 }
                 printTodos(context);
             }
@@ -199,8 +201,9 @@ bot.command('todo', (context) => {
 /**
  * Birthday system
  */
-
-const printBirthdays = (context) => _sendMessage(context, MESSAGE_TYPES.text, `All birthdays:\n${data.birthday.map((birthday, i) => `- ${i}. Name: ${birthday.name}, date: ${birthday.date}`).join('\n')}`)
+const printBirthdays = (context) => {
+    const birthdays = data[context.chat.id] ? data[context.chat.id].birthday : [];
+    _sendMessage(context, MESSAGE_TYPES.text, `All birthdays:\n${birthdays.map((birthday, i) => `- ${i}. Name: ${birthday.name}, date: ${birthday.date}`).join('\n')}`)}
 bot.command('birthday', (context) => {
     console.log('[Bot] Birthday command entered')
     if (controller.isReading || controller.isWriting) _sendMessage(context, MESSAGE_TYPES.text, 'chotto matte');
@@ -238,7 +241,7 @@ bot.command('birthday', (context) => {
                             month > monthLength.length ||
                             day > monthLength[month - 1]) _sendMessage(context, MESSAGE_TYPES.text, `The date does not exist.`);
                         else {
-                            DB._db_add_birthday(name, date);
+                            DB._db_add_birthday(context.chat.id, name, date);
                             printBirthdays(context); 
                         }
                     } else _sendMessage(context, MESSAGE_TYPES.text, `The date does not match with pattern.`);
@@ -247,7 +250,7 @@ bot.command('birthday', (context) => {
                     const index = parseInt(args[2]);
                     if (isNaN(index) || data.birthday.length < index + 1) _sendMessage(context, MESSAGE_TYPES.text, `Invalid number.`);
                     else {
-                        DB._db_remove_birthday(index);
+                        DB._db_remove_birthday(context.chat.id, index);
                         printBirthdays(context);
                     }
                     break;
@@ -328,7 +331,7 @@ const _sendMessage = (context, type, message, options=null) => {
 /** ============================================================
  * Miscellaneus, mostly temporal
  ============================================================ */
- bot.command('id', (context) => {
+bot.command('id', (context) => {
     context.reply(context.chat.id);
 });
 let listenImages = true; let imageCount = 0;
@@ -352,7 +355,7 @@ let ROUTINARY_CHECK_CONFIG = {
     enable: true,
     // timeout: 3600000,  // 1 hour
     timeout: 100000,
-    birthday: {hourToNofiy: 17},
+    birthday: {hourToNotify: 17},
     testId: WHITELIST_IDS[0].id,
 };
 const routinaryCheck = () => setInterval(async () => {
@@ -360,12 +363,12 @@ const routinaryCheck = () => setInterval(async () => {
 
     /* Check for birthdays */
     const now = new Date();
-    const doNotifyNow = now.getHours() === ROUTINARY_CHECK_CONFIG.birthday.hourToNofiy; // only check our because timeout is 1 hour.
+    const doNotifyNow = now.getHours() === ROUTINARY_CHECK_CONFIG.birthday.hourToNotify; // only check our because timeout is 1 hour.
     console.log(`--> [Bot/birthdays] Begun check`)
     data.birthday.forEach((birthday) => {
         const {day, month} = _parseBirthday(birthday.date);
         const isToday = now.getMonth() === month && now.getDate() === day;
-        console.log(`\t-> [Bot/birthdays] Is ${birthday.name}'s birthday today (${birthday.date})? -> ${isToday ? 'yes' : 'no'}`)
+        console.log(`\t-> [Bot/birthdays] Is ${birthday.name}'s birthday today (${birthday.date})? -> ${isToday ? 'yes' : 'no'}`);
         if (isToday && doNotifyNow) {
             bot.telegram.sendMessage(ROUTINARY_CHECK_CONFIG.testId, `Happy birthday ${birthday.name}!!`);
         }
@@ -380,21 +383,26 @@ const routinaryCheck = () => setInterval(async () => {
  * @param { string } type -> birthday or animeAiringUpdate for now 
  */
 class DB {
+    constructor() {
+        
+    }
+    static checkAndCreate = function(chatId) {if (!data[chatId]) data = {...data, [chatId]: {birthday: [], animeAiringUpdate: [], todos: []}};};
+
     /**
      * Birthdays 
      */
     static _db_add_birthday = (chatId, name, date) => {
+        this.checkAndCreate(chatId);
         const newData = {
             ...data,
             [chatId]: {
                 ...data[chatId],
                 birthday: [
-                    ...data.birthday,
+                    ...(data[chatId] && data[chatId].birthday),
                     {name, date}
                 ]
             }
         };
-        console.log(data, newData);
         data = newData;
     };
     static _db_remove_birthday = (chatId, index) => {
@@ -402,7 +410,7 @@ class DB {
             ...data,
             [chatId]: {
                 ...data[chatId],
-                birthday: data.birthday.filter((birthday, i) => i !== index)
+                birthday: data[chatId].birthday.filter((birthday, i) => i !== index)
             }
         };
         console.log(data, newData);
@@ -412,6 +420,7 @@ class DB {
      * Anime updates 
      */
     static _db_add_animeAiringUpdate = (chatId, name, lastEpisode, malId) => {
+        this.checkAndCreate(chatId);
         const newData = {
             ...data,
             [chatId]: {
@@ -424,55 +433,18 @@ class DB {
         };
         console.log(data, newData);
         data = newData;
-    };/**
-     * Todoes
-     */
-    static _db_add_todo = (chatId, text) => {
-        const newData = {
-            ...data,
-            [chatId]: {
-                ...data[chatId],
-                todos: [
-                    ...data[chatId].todos,
-                    {text, checked: false},
-                ]
-            }
-        };
-        console.log(data, newData);
-        data = newData;
-    };
-    static _db_check_todo = (chatId, index) => {
-        const newData = {
-            ...data,
-            [chatId]: {
-                ...data[chatId],
-                todos: data.todos.map((todo, i) => i === index ? {text: todo.text, checked: true} : todo)
-            }
-        };
-        console.log(data, newData);
-        data = newData;
-    };
-    static _db_remove_todo = (chatId, index) => {
-        const newData = {
-            ...data,
-            [chatId]: {
-                ...data[chatId],
-                todos: data.todos.map((todo, i) => i !== index)
-            }
-        };
-        console.log(data, newData);
-        data = newData;
     };
     /**
      * Todoes
      */
     static _db_add_todo = (chatId, text) => {
+        this.checkAndCreate(chatId);
         const newData = {
             ...data,
             [chatId]: {
                 ...data[chatId],
                 todos: [
-                    ...data[chatId].todos,
+                    ...(data[chatId] && data[chatId].todos),
                     {text, checked: false},
                 ]
             }
@@ -485,10 +457,9 @@ class DB {
             ...data,
             [chatId]: {
                 ...data[chatId],
-                todos: data.todos.map((todo, i) => i === index ? {text: todo.text, checked: true} : todo)
+                todos: data[chatId].todos.map((todo, i) => i === index ? {text: todo.text, checked: true} : todo)
             }
         };
-        console.log(data, newData);
         data = newData;
     };
     static _db_remove_todo = (chatId, index) => {
@@ -496,7 +467,7 @@ class DB {
             ...data,
             [chatId]: {
                 ...data[chatId],
-                todos: data.todos.map((todo, i) => i !== index)
+                todos: data[chatId].todos.filter((todo, i) => i !== index)
             }
         };
         console.log(data, newData);
