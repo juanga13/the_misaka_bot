@@ -1,6 +1,5 @@
 /* deps */
 const {Telegraf} = require('telegraf');
-const Extra = require('telegraf/extra');
 const Jikan = require('jikan-node');
 const dotenv = require('dotenv');
 const gitCommitCount = require('git-commit-count');
@@ -244,7 +243,7 @@ bot.command('birthday', (context) => {
                             month > monthLength.length ||
                             day > monthLength[month - 1]) _sendMessage(context, MESSAGE_TYPES.text, `The date does not exist.`);
                         else {
-                            _db_add_birthday(name, date);
+                            DB._db_add_birthday(name, date);
                             printBirthdays(context); 
                         }
                     } else _sendMessage(context, MESSAGE_TYPES.text, `The date does not match with pattern.`);
@@ -253,7 +252,7 @@ bot.command('birthday', (context) => {
                     const index = parseInt(args[2]);
                     if (isNaN(index) || data.birthday.length < index + 1) _sendMessage(context, MESSAGE_TYPES.text, `Invalid number.`);
                     else {
-                        _db_remove_birthday(index);
+                        DB._db_remove_birthday(index);
                         printBirthdays(context);
                     }
                     break;
@@ -299,23 +298,23 @@ const _sendMessage = (context, type, message, options=null) => {
     const now = new Date();
     const isOlder = now.getTime() > (context.message.date*1000 + 10000);
     if (isOlder) {
-        // context.reply('This message is older, ignored', Extra.inReplyTo(context.message.message_id));
+        // context.reply('This message is older, ignored', {reply_to_message_id: context.message.message_id});
     } else {
         switch (type) {
             case MESSAGE_TYPES.text: 
-                if (options ? options.reply : false) context.reply(message, Extra.inReplyTo(context.message.message_id)); 
+                if (options ? options.reply : false) context.reply(message, {reply_to_message_id: context.message.message_id}); 
                 else context.reply(message);
                 break;
             case MESSAGE_TYPES.sticker:
-                if (options ? options.reply : false) context.replyWithSticker(message, Extra.inReplyTo(context.message.message_id)); 
+                if (options ? options.reply : false) context.replyWithSticker(message, {reply_to_message_id: context.message.message_id}); 
                 else context.replyWithSticker(message);
                 break;
             case MESSAGE_TYPES.html:
-                if (options ? options.reply : false) context.replyWithHTML(message, Extra.inReplyTo(context.message.message_id)); 
+                if (options ? options.reply : false) context.replyWithHTML(message, {reply_to_message_id: context.message.message_id}); 
                 else context.replyWithHTML(message);
                 break;
             case MESSAGE_TYPES.photo:
-                if (options ? options.reply : false) context.replyWithPhoto(message, Extra.inReplyTo(context.message.message_id)); 
+                if (options ? options.reply : false) context.replyWithPhoto(message, {reply_to_message_id: context.message.message_id}); 
                 else context.replyWithPhoto(message);
                 break;
 
@@ -378,19 +377,53 @@ const routinaryCheck = () => setInterval(async () => {
  * Returns all data from a single "table"
  * @param { string } type -> birthday or animeAiringUpdate for now 
  */
-const _db_add_birthday = (name, date) => {
-    const newData = {...data, birthday: [...data.birthday, {name, date}]}
-    data = newData;
-};
-const _db_remove_birthday = (index) => {
-    const newData = {...data, birthday: data.birthday.filter((birthday, i) => i !== index)}
-    data = newData;
-};
-const _db_add_animeAiringUpdate = (name, lastEpisode, malId) => {
-    const newData = {...data, animeAiringUpdate: [...data.animeAiringUpdate, {name, lastEpisode, malId}]}
-    data = newData;
-};
-
+class DB {
+    /**
+     * Birthdays 
+     */
+    static _db_add_birthday = (chatId, name, date) => {
+        const newData = {
+            ...data,
+            [chatId]: {
+                ...data[chatId],
+                birthday: [
+                    ...data.birthday,
+                    {name, date}
+                ]
+            }
+        };
+        console.log(data, newData);
+        data = newData;
+    };
+    static _db_remove_birthday = (chatId, index) => {
+        const newData = {
+            ...data,
+            [chatId]: {
+                ...data[chatId],
+                birthday: data.birthday.filter((birthday, i) => i !== index)
+            }
+        };
+        console.log(data, newData);
+        data = newData;
+    };
+    /**
+     * Anime updates 
+     */
+    static _db_add_animeAiringUpdate = (chatId, name, lastEpisode, malId) => {
+        const newData = {
+            ...data,
+            [chatId]: {
+                ...data[chatId],
+                animeAiringUpdate: [
+                    ...data.animeAiringUpdate,
+                    {name, lastEpisode, malId}
+                ]
+            }
+        };
+        console.log(data, newData);
+        data = newData;
+    };
+}
 
 
 /** ============================================================

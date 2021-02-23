@@ -19,7 +19,7 @@
     "git-commit-count": "^1.1.3",
     "jikan-node": "^1.2.1",
     "node-fetch": "^2.6.1",
-    "telegraf": "file:telegraf",
+    "telegraf": "^4.1.0",
     "typescript": "^4.1.3"
   },
   "devDependencies": {},
