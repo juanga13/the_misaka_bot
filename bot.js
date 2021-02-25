@@ -11,13 +11,12 @@ const mal = new Jikan();
 const bot = new Telegraf(token);
 const {WHITELIST_IDS} = require('./whitelist');
 const controller = require('./controller');
-const { isValid } = require('date-fns');
 const version = `${process.env.MAJOR_VERSION}.${gitCommitCount()}`;  // great, major version + commit B) will need to change later if version goes to 2 and commits still N yep
-
 
 
 const MESSAGE_TYPES = {text: 'text', sticker: 'sticker', html: 'html', photo: 'photo'};
 
+module.exports = {MESSAGE_TYPES};
 
 let data = {birthday: [], animeAiringUpdate: []};
 controller.read().then(res => data = res);
@@ -36,11 +35,12 @@ bot.help((context) => {
         {command: '/help', description: `this fukin message.`},
         {command: '/season', description: `this seasonal's animes.`},
         {command: '/lefo', description: `LEFO.`},
-        {command: '/image', description: `random image.`},
+        // {command: '/image', description: `random image.`},
         {command: '/sticker [reaction]', description: `random sticker unless reaction is given, See '/sticker list' for every sticker.`},
         {command: '/nhentai', description: `yyyyep.`},
         {command: '/todo', description: `Todos list, show all actions with '/todo help'.`},
         {command: '/birthday', description: `List of birthdays, show more actions with '/birthday help'.`},
+        {command: '/mbti', description: `Mbti menu, show more commands with '/mbti help'.`},
     ];
     _sendMessage(context, MESSAGE_TYPES.text, `What are you, stupid? Here's what I can do:\n${help.map((item) => `- ${item.command}: ${item.description}`).join('\n')}`)
 })
@@ -74,7 +74,7 @@ bot.command('season', (context) => {
         if (month >= 3 && month < 6) return 'spring';
         if (month >= 6 && month < 9) return 'summer';
         if (month >= 9 && month < 12) return 'fall';
-        console.log('invalid month?');
+        // console.log('invalid month?');
         return 'invalid'
     };
     mal.findSeason(seasonString(), year)
@@ -205,7 +205,7 @@ const printBirthdays = (context) => {
     const birthdays = data[context.chat.id] ? data[context.chat.id].birthday : [];
     _sendMessage(context, MESSAGE_TYPES.text, `All birthdays:\n${birthdays.map((birthday, i) => `- ${i}. Name: ${birthday.name}, date: ${birthday.date}`).join('\n')}`)}
 bot.command('birthday', (context) => {
-    console.log('[Bot] Birthday command entered')
+    // console.log('[Bot] Birthday command entered');
     if (controller.isReading || controller.isWriting) _sendMessage(context, MESSAGE_TYPES.text, 'chotto matte');
     else {
         const args = context.message.text.split(' ');
@@ -261,6 +261,17 @@ bot.command('birthday', (context) => {
 })
 
 /**
+ * MBTI command system
+ * calls to ./mbti.js to finish
+ */
+bot.command('mbti', (context) => {
+    if (controller.isReading || controller.isWriting) _sendMessage(context, MESSAGE_TYPES.text, 'chotto matte');
+    else {
+        const mbtis = data[context.chat.id] ? data[context.chat.id].mbti : [];
+        require('./mbti')(context, _sendMessage, mbtis, DB.mbti_add_or_change);}
+});
+
+/**
  * Cool reaction system for automatically reply when trigger word
  * is read
  * 
@@ -292,6 +303,7 @@ bot.on('text', (context) => {
         else _sendMessage(context, reaction.type, reaction.message, reaction.options);
     }
 });
+
 /**
  * Auxiliaries, includes:
  * <> _sendMessage -> every sending intentions to any chat should call this.
@@ -359,22 +371,22 @@ let ROUTINARY_CHECK_CONFIG = {
     testId: WHITELIST_IDS[0].id,
 };
 const routinaryCheck = () => setInterval(async () => {
-    console.log('========== [Bot] This is routinary check. ==========');
+    // console.log('========== [Bot] This is routinary check. ==========');
 
     /* Check for birthdays */
     const now = new Date();
     const doNotifyNow = now.getHours() === ROUTINARY_CHECK_CONFIG.birthday.hourToNotify; // only check our because timeout is 1 hour.
-    console.log(`--> [Bot/birthdays] Begun check`)
+    // console.log(`--> [Bot/birthdays] Begun check`)
     data.birthday.forEach((birthday) => {
         const {day, month} = _parseBirthday(birthday.date);
         const isToday = now.getMonth() === month && now.getDate() === day;
-        console.log(`\t-> [Bot/birthdays] Is ${birthday.name}'s birthday today (${birthday.date})? -> ${isToday ? 'yes' : 'no'}`);
+        // console.log(`\t-> [Bot/birthdays] Is ${birthday.name}'s birthday today (${birthday.date})? -> ${isToday ? 'yes' : 'no'}`);
         if (isToday && doNotifyNow) {
             bot.telegram.sendMessage(ROUTINARY_CHECK_CONFIG.testId, `Happy birthday ${birthday.name}!!`);
         }
     });
-    console.log(`--> [Bot/birthdays] Finished check`);
-    console.log('========== [Bot] Ended routinary check. ==========');
+    // console.log(`--> [Bot/birthdays] Finished check`);
+    // console.log('========== [Bot] Ended routinary check. ==========');
 }, ROUTINARY_CHECK_CONFIG.timeout);
 
 
@@ -383,10 +395,9 @@ const routinaryCheck = () => setInterval(async () => {
  * @param { string } type -> birthday or animeAiringUpdate for now 
  */
 class DB {
-    constructor() {
-        
-    }
-    static checkAndCreate = function(chatId) {if (!data[chatId]) data = {...data, [chatId]: {birthday: [], animeAiringUpdate: [], todos: []}};};
+    constructor() {}
+    
+    static checkAndCreate = function(chatId) {if (!data[chatId]) data = {...data, [chatId]: {birthday: [], animeAiringUpdate: [], todos: [], mbti: []}};};
 
     /**
      * Birthdays 
@@ -413,7 +424,6 @@ class DB {
                 birthday: data[chatId].birthday.filter((birthday, i) => i !== index)
             }
         };
-        console.log(data, newData);
         data = newData;
     };
     /**
@@ -431,7 +441,6 @@ class DB {
                 ]
             }
         };
-        console.log(data, newData);
         data = newData;
     };
     /**
@@ -449,7 +458,6 @@ class DB {
                 ]
             }
         };
-        console.log(data, newData);
         data = newData;
     };
     static _db_check_todo = (chatId, index) => {
@@ -470,7 +478,27 @@ class DB {
                 todos: data[chatId].todos.filter((todo, i) => i !== index)
             }
         };
-        console.log(data, newData);
+        data = newData;
+    };
+
+    /**
+     * MBTI
+     */
+    static mbti_add_or_change = (chatId, userId, userName, mbti) => {
+        this.checkAndCreate(chatId);
+        const alreadyExists = !!data[chatId].mbti.find((aMbti) => aMbti.userId === userId);
+        const newData = {
+            ...data,
+            [chatId]: {
+                ...data[chatId],
+                mbti: alreadyExists ?  
+                    data[chatId].mbti.map((aMbti) => aMbti.userId === userId ? ({userId, userName, mbti}) : aMbti)
+                    : [
+                        ...(data[chatId] && data[chatId].mbti),
+                        {userId, userName, mbti},
+                    ]
+            }
+        };
         data = newData;
     };
 }
@@ -492,12 +520,12 @@ const saveProgress = () => {
     else controller.write(data);
 }
 process.once('SIGINT', () => {
-    console.log('SIGINT under action');
+    // console.log('SIGINT under action');
     saveProgress();
     bot.stop('SIGINT');
 })
 process.once('SIGTERM', () => {
-    console.log('SIGTERM under action');
+    // console.log('SIGTERM under action');
     saveProgress();
     bot.stop('SIGTERM');
 })
