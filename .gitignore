@@ -3,8 +3,7 @@
 /dist
 /.vscode
 .env
-/telegraf
-/telegraf-v3
+data.csv
 
 # backend
 /backend/node_modules
