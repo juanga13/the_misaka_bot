@@ -7,19 +7,26 @@
 const csv = require('csv-parser');
 const fs = require('fs');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+const headers = [
+    /* ID */ {id: 'table', title: 'table'},
+    /* ID */ {id: 'chatId', title: 'chatId'},
+    /* BIRTHDAY | ANIME */ {id: 'name', title: 'name'},
+    /* BIRTHDAY */ {id: 'date', title: 'date'},
+    /* ANIME */ {id: 'lastEpisode', title: 'lastEpisode'},
+    /* ANIME */ {id: 'malId', title: 'malId'},
+    /* TODOS */ {id: 'text', title: 'text'},
+    /* TODOS */ {id: 'checked', title: 'checked'},
+    /* MBTI */ {id: 'userId', title: 'userId'},
+    /* MBTI */ {id: 'userName', title: 'userName'},
+    /* MBTI */ {id: 'mbti', title: 'mbti'},
+];
+const TABLE_TYPES = {
+    BIRTHDAY: 'birthday',
+    ANIME_AIRING: 'animeAiringUpdate',
+    TODOS: 'todos',
+    MBTI: 'mbti',
+};
 
-const csvWriter = createCsvWriter({
-    path: 'data.csv',
-    header: [
-        /* ID*/ {id: 'table', title: 'Table'},
-        /* BIRTHDAY | ANIME*/ {id: 'name', title: 'Name'},
-        /* BIRTHDAY*/ {id: 'date', title: 'Date'},
-        /* ANIME*/ {id: 'lastEpisode', title: 'Last Episode'},
-        /* ANIME*/ {id: 'malId', title: 'MAL id'},
-        /* TODOS */ {id: 'text', title: 'Todo content'},
-        /* TODOS */ {id: 'checked', title: 'Todo checked'},
-    ]
-});
 /*
 Parsing table will output these objects
 
@@ -35,24 +42,11 @@ animeAiringUpdate: [
     {name: 'Shingeki no Kyojin The Final Season', lastEpisode: 7, malId: 40028}
 ]
 */
-const TABLE_TYPES = {BIRTHDAY: 'birthday', ANIME_AIRING: 'animeAiringUpdate', TODOS: 'todos'};
 
 class DataController {
     constructor() {
         this.isReading, this.isWriting = false;
-        this.csvWriter = createCsvWriter({
-            path: 'data.csv',
-            header: [
-                {id: 'table', title: 'table'},
-                {id: 'chatId', title: 'chatId'},
-                {id: 'name', title: 'name'},
-                {id: 'date', title: 'date'},
-                {id: 'lastEpisode', title: 'lastEpisode'},
-                {id: 'malId', title: 'malId'},
-                {id: 'text', title: 'text'},
-                {id: 'checked', title: 'checked'},
-            ]
-        });
+        this.csvWriter = createCsvWriter({path: 'data.csv', header: headers});
     }
 
     getState() {
@@ -66,19 +60,25 @@ class DataController {
             Object.values(newData[chatId].birthday).forEach(({name, date}) => {
                 newCsv.push({
                     table: 'birthday', chatId, name, date,
-                    lastEpisode: '', malId: '', text: '', checked: '',
+                    lastEpisode: '', malId: '', text: '', checked: '', mbti: '', userId: '',
                 })
             });
             Object.values(newData[chatId].animeAiringUpdate).forEach(({name, lastEpisode, malId}) => {
                 newCsv.push({
                     table: 'animeAiringUpdate', chatId, name, lastEpisode, malId,
-                    date: '', text: '', checked: '',
+                    date: '', text: '', checked: '', mbti: '', userId: '',
                 })
             });
             Object.values(newData[chatId].todos).forEach(({text, checked}) => {
                 newCsv.push({
                     table: 'todos', chatId, text, checked,
-                    name: '', lastEpisode: '', malId: '', date: '',
+                    name: '', lastEpisode: '', malId: '', date: '', mbti: '', userId: '',
+                })
+            });
+            Object.values(newData[chatId].mbti).forEach(({userId, userName, mbti}) => {
+                newCsv.push({
+                    table: 'mbti', chatId, userId, userName, mbti,
+                    name: '', lastEpisode: '', malId: '', date: '', text: '', checked: '',
                 })
             });
         });
@@ -96,7 +96,7 @@ class DataController {
             fs.createReadStream('data.csv')
                 .pipe(csv())
                 .on('data', (row) => {
-                    const {table, chatId, name, date, lastEpisode, malId, text, checked} = row;
+                    const {table, chatId, name, date, lastEpisode, malId, text, checked, userId, userName, mbti} = row;
                     // console.log('row', row);
                     result = this.checkAndCreate(chatId, result);
                     switch (table) {
@@ -136,7 +136,18 @@ class DataController {
                                 }
                             };
                             break;
-    
+                        case TABLE_TYPES.MBTI:
+                            result = {
+                                ...result,
+                                [chatId]: {
+                                    ...result[chatId],
+                                    mbti: [
+                                        ...(result[chatId] && result[chatId].mbti),
+                                        {userId, userName, mbti}
+                                    ]
+                                }
+                            };
+                            break;
                         default: break;
                     }
                 })
@@ -150,7 +161,7 @@ class DataController {
     }
 
     checkAndCreate(chatId, dataToBe) {
-        if (!dataToBe[chatId]) return {...dataToBe, [chatId]: {birthday: [], animeAiringUpdate: [], todos: []}};
+        if (!dataToBe[chatId]) return {...dataToBe, [chatId]: {birthday: [], animeAiringUpdate: [], todos: [], mbti: []}};
         else return dataToBe; 
     }
 }

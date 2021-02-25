@@ -1,1 +1,1 @@
-table,chatId,name,date,lastEpisode,malId,text,checked
+table,chatId,name,date,lastEpisode,malId,text,checked,userId,userName,mbti
