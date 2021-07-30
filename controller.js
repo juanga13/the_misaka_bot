@@ -104,7 +104,7 @@ class DataController {
                             result = {
                                 ...result,
                                 [chatId]: {
-                                    ...results[chatId],
+                                    ...result[chatId],
                                     birthday: [
                                         ...(result[chatId] && result[chatId].birthday),
                                         {name, date}

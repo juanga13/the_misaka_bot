@@ -1,5 +1,6 @@
 /* deps */
 const {Telegraf} = require('telegraf');
+const telegrafGetChatMembers = require('telegraf-getchatmembers')
 const Jikan = require('jikan-node');
 const dotenv = require('dotenv');
 const gitCommitCount = require('git-commit-count');
@@ -13,13 +14,15 @@ const {WHITELIST_IDS} = require('./whitelist');
 const controller = require('./controller');
 const version = `${process.env.MAJOR_VERSION}.${gitCommitCount()}`;  // great, major version + commit B) will need to change later if version goes to 2 and commits still N yep
 
-
 const MESSAGE_TYPES = {text: 'text', sticker: 'sticker', html: 'html', photo: 'photo'};
 
 module.exports = {MESSAGE_TYPES};
 
 let data = {birthday: [], animeAiringUpdate: []};
 controller.read().then(res => data = res);
+
+bot.use(telegrafGetChatMembers);
+
 /**
  * TODO: commented because using it in other thing, uncomment!
  * Simple message for when start using the bot, maybe add
@@ -93,7 +96,22 @@ bot.command('season', (context) => {
  */
 bot.command('lefo', (context) => {
     _sendMessage(context, MESSAGE_TYPES.html, `<b>LEFO</b>`)
-})
+});
+
+/**
+ * Best (2) command in the world.
+ */
+bot.command('puta', async (context) => {
+    _sendMessage(context, MESSAGE_TYPES.html, `<b>VIQU</b>`)
+});
+
+/**
+ * Best (3) command in the world.
+ */
+bot.command('putaa', (context) => {
+    const allMembersCaps = context.getChatMembers(context.chat.id).map((member) => member.user.first_name.toUpperCase());
+    _sendMessage(context, MESSAGE_TYPES.html, `<b>${allMembersCaps[Math.floor(Math.random() * allMembersCaps.length)]}</b>`);
+});
 
 /**
  * First version of sticker sender
@@ -248,7 +266,8 @@ bot.command('birthday', (context) => {
                     break;
                 case 'remove':
                     const index = parseInt(args[2]);
-                    if (isNaN(index) || data.birthday.length < index + 1) _sendMessage(context, MESSAGE_TYPES.text, `Invalid number.`);
+                    console.log({index, what: data[context.chat.id].birthday});
+                    if (isNaN(index) || data[context.chat.id].birthday.length < index + 1) _sendMessage(context, MESSAGE_TYPES.text, `Invalid number.`);
                     else {
                         DB._db_remove_birthday(context.chat.id, index);
                         printBirthdays(context);
