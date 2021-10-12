@@ -23,6 +23,10 @@ controller.read().then(res => data = res);
 
 bot.use(telegrafGetChatMembers);
 
+bot.command('id', (context) => {
+    context.reply(context.chat.id);
+});
+
 /**
  * TODO: commented because using it in other thing, uncomment!
  * Simple message for when start using the bot, maybe add
@@ -323,6 +327,7 @@ bot.on('text', (context) => {
     }
 });
 
+
 /**
  * Auxiliaries, includes:
  * <> _sendMessage -> every sending intentions to any chat should call this.
@@ -362,9 +367,6 @@ const _sendMessage = (context, type, message, options=null) => {
 /** ============================================================
  * Miscellaneus, mostly temporal
  ============================================================ */
-bot.command('id', (context) => {
-    context.reply(context.chat.id);
-});
 let listenImages = true; let imageCount = 0;
 bot.command('image', (context) => {
     if (listenImages) {
