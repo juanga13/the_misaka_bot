@@ -6,7 +6,10 @@ const dotenv = require('dotenv');
 const gitCommitCount = require('git-commit-count');
 
 /* instances */
-dotenv.config();
+// Load environment-specific configuration
+const environment = process.env.NODE_ENV || 'development';
+const envFile = environment === 'production' ? '.env.prod' : '.env.dev';
+dotenv.config({ path: envFile });
 const token = process.env.TOKEN;
 const mal = new Jikan();
 const bot = new Telegraf(token);

@@ -25,10 +25,42 @@
 
 ## personal notes
 
-### .env variables
-TOKEN: token needed to run any telegram bot lol.
-WEEBS_GROUP_ID: private id (not used currently).
-MAJOR_VERSION: differentiate major version, as its important i decided to place it here just because.
+### Environment Configuration
+
+The bot now supports two environments: development and production.
+
+#### Environment Variables
+- `TOKEN`: token needed to run any telegram bot
+- `WEEBS_GROUP_ID`: private id (not used currently)
+- `MAJOR_VERSION`: differentiate major version, as its important i decided to place it here just because
+- `NODE_ENV`: environment identifier (development/production)
+
+#### Setup Instructions
+
+1. Copy the environment template files:
+   ```bash
+   cp env.dev.template .env.dev
+   cp env.prod.template .env.prod
+   ```
+
+2. Edit the environment files with your actual values:
+   - `.env.dev` - for development environment
+   - `.env.prod` - for production environment
+
+3. Run the bot in different environments:
+   ```bash
+   # Development
+   npm run dev
+   
+   # Production
+   npm run prod
+   
+   # Default (production)
+   npm start
+   ```
+
+#### Service Configuration
+The `misakabot.service` is configured to always use the production environment (`NODE_ENV=production`).
 
 ### install telegraf v3
 

@@ -3,6 +3,8 @@
 /dist
 /.vscode
 .env
+.env.dev
+.env.prod
 data.csv
 
 # backend
