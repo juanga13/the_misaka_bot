@@ -4,9 +4,13 @@ const telegrafGetChatMembers = require('telegraf-getchatmembers')
 const Jikan = require('jikan-node');
 const dotenv = require('dotenv');
 const gitCommitCount = require('git-commit-count');
+const jikanUrl = 'https://api.jikan.moe/v4/seasons';
 
 /* instances */
-dotenv.config();
+// Load environment-specific configuration
+const environment = process.env.NODE_ENV || 'development';
+const envFile = environment === 'production' ? '.env.prod' : '.env.dev';
+dotenv.config({ path: envFile });
 const token = process.env.TOKEN;
 const mal = new Jikan();
 const bot = new Telegraf(token);
@@ -15,6 +19,8 @@ const controller = require('./controller');
 const version = `${process.env.MAJOR_VERSION}.${gitCommitCount()}`;  // great, major version + commit B) will need to change later if version goes to 2 and commits still N yep
 
 const MESSAGE_TYPES = {text: 'text', sticker: 'sticker', html: 'html', photo: 'photo'};
+
+const greetedChats = new Set();
 
 module.exports = {MESSAGE_TYPES};
 
@@ -34,7 +40,7 @@ bot.command('id', (context) => {
  * welcome message i mean)
  */
 // bot.start((context) => {
-//     context.reply('Hi I'm Misaka!');
+//     context.reply(`Hi I'm Misaka!`);
 // });
 
 bot.help((context) => {
@@ -50,6 +56,23 @@ bot.help((context) => {
         {command: '/mbti', description: `Mbti menu, show more commands with '/mbti help'.`},
     ];
     _sendMessage(context, MESSAGE_TYPES.text, `What are you, stupid? Here's what I can do:\n${help.map((item) => `- ${item.command}: ${item.description}`).join('\n')}`)
+})
+
+bot.command('greet', (context) => {
+    const chatId = context.chat.id;
+
+    if (greetedChats.has(chatId)) {
+        return;
+    }
+
+    greetedChats.add(chatId);
+
+    const sticker = {
+        name: 'blushingDirect', id: 'CAACAgEAAxkBAAEEno5gCP3OU2fbFOM7z2c7JX9908CdPwACbAEAAhcRSETcoT6w_YxEih4E'
+    };
+
+    _sendMessage(context, MESSAGE_TYPES.text, 'No es como si hubiera vuelto porque los extrañaba...');
+    _sendMessage(context, MESSAGE_TYPES.sticker, sticker.id);
 })
 
 bot.command('asd', (context) => _sendMessage(context, MESSAGE_TYPES.text, 'hi', {reply: true}))
@@ -71,7 +94,7 @@ bot.command('asd', (context) => _sendMessage(context, MESSAGE_TYPES.text, 'hi', 
  *    - interval check new chapter and if it has, notify it
  *    - anime news
  */
-bot.command('season', (context) => {
+bot.command('season', async (context) => {
     _sendMessage(context, MESSAGE_TYPES.text, 'Okay, getting your seasonals...');
     const today = new Date();
     const year = today.getFullYear();
@@ -84,12 +107,28 @@ bot.command('season', (context) => {
         // console.log('invalid month?');
         return 'invalid'
     };
-    mal.findSeason(seasonString(), year)
-        .then((info) => {
-            _sendMessage(context, MESSAGE_TYPES.text, info.anime.slice(0, 9).map((anAnime) => `- ${anAnime.title} [Score: ${anAnime.score}].`).join('\n'));
-            _sendMessage(context, MESSAGE_TYPES.text, `It's not like I made this list for you, b-baka!`);
-        })
-        .catch((error) => {console.log(error)});
+    // mal.findSeason(seasonString(), year)
+    //     .then((info) => {
+    //         _sendMessage(context, MESSAGE_TYPES.text, info.anime.slice(0, 9).map((anAnime) => `- ${anAnime.title} [Score: ${anAnime.score}].`).join('\n'));
+    //         _sendMessage(context, MESSAGE_TYPES.text, `It's not like I made this list for you, b-baka!`);
+    //     })
+    //     .catch((error) => {console.log(error)});
+
+    const season = seasonString();
+    
+    try {
+        const res = await fetch(`${jikanUrl}/${year}/${season}`);
+        const json = await res.json();
+        const list = json.data
+            .slice(0, 9)
+            .map(a => `- ${a.title} [Score: ${a.score ?? 'N/A'}]`)
+            .join('\n');
+        _sendMessage(context, MESSAGE_TYPES.text, list);
+        _sendMessage(context, MESSAGE_TYPES.text, `It's not like I made this list for you, b-baka!`);
+    } catch (err) {
+        console.error(err);
+        _sendMessage(context, MESSAGE_TYPES.text, "Couldn't fetch seasonal data 😢");
+    }
 });
 
 /**
@@ -531,7 +570,6 @@ class DB {
 console.log(`Launching the_misaka_bot - version ${version}`)
 // routinaryCheck(); DISABLING IT BECAUSE FOR SOME REASON TELEGRAF CANT USE AWAIT ASYNC SHIT
 bot.launch();
- 
 
 /** ============================================================
  * On terminate calls

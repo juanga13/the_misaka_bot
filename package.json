@@ -4,7 +4,10 @@
   "description": "- go to https://github.com/telegraf/telegraf - clone repo - change to v3 branch - go to this repo and do npm install ./telegraf/ - now ```const Extra = require('telegraf/extra');``` works",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "NODE_ENV=development node bot.js",
+    "prod": "NODE_ENV=production node bot.js",
+    "start": "npm run prod"
   },
   "keywords": [],
   "author": "",
