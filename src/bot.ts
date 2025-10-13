@@ -11,6 +11,7 @@ import { setupHelpCommand } from './commands/setupHelpCommand';
 import { setupReactions } from './commands/setupReactions';
 import { setupMiscCommands } from './commands/setupMiscCommands';
 import { setupStickerCommand } from './commands/setupStickerCommand';
+import { setupNhentaiCommand } from './commands/setupNhentaiCommand';
 
 const token = process.env.TOKEN;
 if (!token) throw new Error("token is missing!");
@@ -19,6 +20,7 @@ const bot = new Telegraf<Context>(token);
 
 bot.command('ping', (ctx) => ctx.reply('pong'));
 
+setupNhentaiCommand(bot);
 setupStickerCommand(bot);
 setupMiscCommands(bot);
 setupHelpCommand(bot);
