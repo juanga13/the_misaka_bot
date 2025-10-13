@@ -5,14 +5,22 @@ dotenv.config({
   path: process.env.NODE_ENV === "development" ? ".env.dev" : ".env",
 });
 
-import { helpCommand } from './commands/helpCommand';
+import { _sendMessage, MESSAGE_TYPES } from './utils/sendMessage';
+
+import { setupHelpCommand } from './commands/setupHelpCommand';
+import { setupReactions } from './commands/setupReactions';
+import { setupMiscCommands } from './commands/setupMiscCommands';
 
 const token = process.env.TOKEN;
 if (!token) throw new Error("token is missing!");
 
 const bot = new Telegraf<Context>(token);
 
-helpCommand(bot);
+bot.command('ping', (ctx) => ctx.reply('pong'));
+
+setupMiscCommands(bot);
+setupHelpCommand(bot);
+setupReactions(bot);
 
 bot.start((ctx) => ctx.reply("Hi I'm Misaka!"));
 

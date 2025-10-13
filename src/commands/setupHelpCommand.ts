@@ -1,7 +1,7 @@
 import { Telegraf, Context } from "telegraf";
 import { _sendMessage, MESSAGE_TYPES } from "../utils/sendMessage";
 
-export const helpCommand  = (bot: Telegraf<Context>) => {
+export const setupHelpCommand  = (bot: Telegraf<Context>) => {
   bot.help((ctx) => {
     const help = [
       { command: "/help", description: "this fukin message." },
