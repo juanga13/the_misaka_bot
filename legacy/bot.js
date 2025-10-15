@@ -12,7 +12,7 @@ const envFile = environment === 'production' ? '.env.prod' : '.env.dev';
 dotenv.config({ path: envFile });
 const token = process.env.TOKEN;
 const bot = new Telegraf(token);
-const {WHITELIST_IDS} = require('./whitelist');
+const {WHITELIST_IDS} = require('../whitelist');
 const controller = require('./controller');
 const version = `${process.env.MAJOR_VERSION}.${gitCommitCount()}`;  // great, major version + commit B) will need to change later if version goes to 2 and commits still N yep
 const fetch = require('node-fetch');
