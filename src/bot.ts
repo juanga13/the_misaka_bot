@@ -13,6 +13,7 @@ import { setupMiscCommands } from './commands/setupMiscCommands';
 import { setupStickerCommand } from './commands/setupStickerCommand';
 import { setupNhentaiCommand } from './commands/setupNhentaiCommand';
 import { setupBirthdayCommand } from './commands/setupBirthdayCommand';
+import { setupMbtiCommand } from './commands/setupMbtiCommand';
 
 const token = process.env.TOKEN;
 if (!token) throw new Error("token is missing!");
@@ -21,6 +22,7 @@ const bot = new Telegraf<Context>(token);
 
 bot.command('ping', (ctx) => ctx.reply('pong'));
 
+setupMbtiCommand(bot);
 setupBirthdayCommand(bot);
 setupNhentaiCommand(bot);
 setupStickerCommand(bot);

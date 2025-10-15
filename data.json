@@ -1,13 +1,14 @@
 {
   "-497732391": {
-    "birthday": [
-      {
-        "name": "Juanga",
-        "date": "15/06"
-      }
-    ],
+    "birthday": [],
     "animeAiringUpdate": [],
     "todos": [],
-    "mbti": []
+    "mbti": [
+      {
+        "userId": "1519944944",
+        "userName": "Ivo",
+        "mbti": "ISFP"
+      }
+    ]
   }
 }
