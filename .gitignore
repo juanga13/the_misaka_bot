@@ -6,6 +6,7 @@
 .env.dev
 .env.prod
 data.csv
+data.json
 
 # backend
 /backend/node_modules

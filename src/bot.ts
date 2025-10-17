@@ -14,6 +14,7 @@ import { setupStickerCommand } from './commands/setupStickerCommand';
 import { setupNhentaiCommand } from './commands/setupNhentaiCommand';
 import { setupBirthdayCommand } from './commands/setupBirthdayCommand';
 import { setupMbtiCommand } from './commands/setupMbtiCommand';
+import {setupBirthdayChecker} from './utils/setupBirthdayChecker';
 
 const token = process.env.TOKEN;
 if (!token) throw new Error("token is missing!");
@@ -27,6 +28,7 @@ setupBirthdayCommand(bot);
 setupNhentaiCommand(bot);
 setupStickerCommand(bot);
 setupMiscCommands(bot);
+setupBirthdayChecker(bot);
 setupHelpCommand(bot);
 setupReactions(bot);
 

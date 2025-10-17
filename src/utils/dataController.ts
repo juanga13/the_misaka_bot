@@ -11,8 +11,10 @@ export enum TableType {
 }
 
 export interface BirthdayEntry {
-  name: string
+  userId: string
+  userName: string
   date: string // format: dd/mm
+  customMessage?: string
 }
 
 export interface AnimeAiringEntry {
@@ -115,10 +117,10 @@ async remove<T extends TableType>(
 
   // ===== Specific helpers =====
 
-  async addBirthday(chatId: string, name: string, date: string): Promise<void> {
-    const exists = this.getTable(chatId, TableType.BIRTHDAY).some(b => b.name === name)
+  async addBirthday(chatId: string, userId: string, userName: string, date: string): Promise<void> {
+    const exists = this.getTable(chatId, TableType.BIRTHDAY).some(b => b.userName === userName)
     if (!exists) {
-      await this.add(chatId, TableType.BIRTHDAY, { name, date })
+      await this.add(chatId, TableType.BIRTHDAY, { userId, userName, date })
     }
   }
 

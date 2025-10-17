@@ -14,7 +14,7 @@ export const setupBirthdayCommand = (bot: Telegraf<Context>) => {
     }
 
     const list = birthdays
-      .map((b, i) => `- ${i}. Name: ${b.name}, Date: ${b.date}`)
+      .map((b, i) => `- ${i}. Name: ${b.userName}, Date: ${b.date}`)
       .join('\n')
 
     return _sendMessage(ctx, MESSAGE_TYPES.text, `All birthdays:\n${list}`)
@@ -32,23 +32,23 @@ export const setupBirthdayCommand = (bot: Telegraf<Context>) => {
     switch (command) {
       case 'help':
         return _sendMessage(ctx, MESSAGE_TYPES.text, `
-'/birthday' options:
+          '/birthday' options:
 
-- /birthday → lists all birthdays
-- /birthday add [name] [dd/mm] → saves a new birthday
-- /birthday remove [number] → removes a birthday by its list index
+          - /birthday → lists all birthdays
+          - /birthday me [dd/mm] → saves a new birthday
+          - /birthday remove [number] → removes a birthday by its list index
 
-Example: /birthday add Jose Perez 01/01
-`)
+          Example: /birthday me 01/01
+        `)
 
-      case 'add': {
-        const rest = args.slice(2).join(' ')
-        const match = rest.match(/(.*)\s(\d{2}\/\d{2})$/)
-        if (!match) {
-          return _sendMessage(ctx, MESSAGE_TYPES.text, `Invalid format. Use "name dd/mm"`)
+      case 'me': {
+       if (!ctx.from) return _sendMessage(ctx, MESSAGE_TYPES.text, `Cannot determine your user info.`)
+
+        const date = args[2]
+        if (!date) {
+          return _sendMessage(ctx, MESSAGE_TYPES.text, `You must provide a date. Example: /birthday me 01/01`)
         }
 
-        const [, name, date] = match
         const [dayStr, monthStr] = date.split('/')
         const day = parseInt(dayStr)
         const month = parseInt(monthStr)
@@ -58,7 +58,10 @@ Example: /birthday add Jose Perez 01/01
           return _sendMessage(ctx, MESSAGE_TYPES.text, `The date does not exist.`)
         }
 
-        await dataController.addBirthday(chatId, name.trim(), date)
+        const userId = String(ctx.from.id)
+        const userName = ctx.from.username || ctx.from.first_name || 'unknown'
+
+        await dataController.addBirthday(chatId, userId, userName, date)
         return printBirthdays(ctx)
       }
 
