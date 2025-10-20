@@ -106,12 +106,6 @@ bot.command('season', async (context) => {
         // console.log('invalid month?');
         return 'invalid'
     };
-    // mal.findSeason(seasonString(), year)
-    //     .then((info) => {
-    //         _sendMessage(context, MESSAGE_TYPES.text, info.anime.slice(0, 9).map((anAnime) => `- ${anAnime.title} [Score: ${anAnime.score}].`).join('\n'));
-    //         _sendMessage(context, MESSAGE_TYPES.text, `It's not like I made this list for you, b-baka!`);
-    //     })
-    //     .catch((error) => {console.log(error)});
 
     const season = seasonString();
     
