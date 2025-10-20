@@ -1,4 +1,6 @@
-import Telegraf, { Context } from 'telegraf';
+import { Telegraf, Context } from 'telegraf';
+
+type ReplyExtra = Parameters<Context['reply']>[1];
 
 export enum MESSAGE_TYPES {
   text = 'text',
@@ -30,28 +32,36 @@ export async function _sendMessage(
         case MESSAGE_TYPES.text:
           await ctx.reply(
             message,
-            shouldReply ? { reply_to_message_id: ctx.message?.message_id } : undefined
+            shouldReply && ctx.message?.message_id
+              ? ({ reply_to_message_id: ctx.message.message_id } as ReplyExtra)
+              : undefined
           );
           break;
 
         case MESSAGE_TYPES.html:
-          await ctx.replyWithHTML(
+          await ctx.reply(
             message,
-            shouldReply ? { reply_to_message_id: ctx.message?.message_id } : undefined
+            shouldReply && ctx.message?.message_id
+              ? ({ reply_to_message_id: ctx.message.message_id } as ReplyExtra)
+              : undefined
           );
           break;
 
         case MESSAGE_TYPES.sticker:
-          await ctx.replyWithSticker(
+          await ctx.reply(
             message,
-            shouldReply ? { reply_to_message_id: ctx.message?.message_id } : undefined
+            shouldReply && ctx.message?.message_id
+              ? ({ reply_to_message_id: ctx.message.message_id } as ReplyExtra)
+              : undefined
           );
           break;
 
         case MESSAGE_TYPES.photo:
-          await ctx.replyWithPhoto(
+          await ctx.reply(
             message,
-            shouldReply ? { reply_to_message_id: ctx.message?.message_id } : undefined
+            shouldReply && ctx.message?.message_id
+              ? ({ reply_to_message_id: ctx.message.message_id } as ReplyExtra)
+              : undefined
           );
           break;
 

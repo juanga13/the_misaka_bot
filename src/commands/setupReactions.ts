@@ -19,6 +19,20 @@ const reactions: Reaction[] = [
         isFunction: true,
     },
     {
+      keyword: /(4|cuatro)$/,
+      isRegex: true,
+      type: MESSAGE_TYPES.text,
+      message: 'Tu culo y mi aparato',
+      options: { reply: true },
+    },
+    {
+      keyword: /(5|cinco)$/,
+      isRegex: true,
+      type: MESSAGE_TYPES.text,
+      message: 'Por el culo te la hinco',
+      options: { reply: true },
+    },
+    {
         keyword: /(8|ocho)$/,
         isRegex: true,
         type: MESSAGE_TYPES.text,
