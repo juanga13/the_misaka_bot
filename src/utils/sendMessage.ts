@@ -39,7 +39,7 @@ export async function _sendMessage(
           break;
 
         case MESSAGE_TYPES.html:
-          await ctx.reply(
+          await ctx.replyWithHTML(
             message,
             shouldReply && ctx.message?.message_id
               ? ({ reply_to_message_id: ctx.message.message_id } as ReplyExtra)
@@ -48,7 +48,7 @@ export async function _sendMessage(
           break;
 
         case MESSAGE_TYPES.sticker:
-          await ctx.reply(
+          await ctx.replyWithSticker(
             message,
             shouldReply && ctx.message?.message_id
               ? ({ reply_to_message_id: ctx.message.message_id } as ReplyExtra)
@@ -57,7 +57,7 @@ export async function _sendMessage(
           break;
 
         case MESSAGE_TYPES.photo:
-          await ctx.reply(
+          await ctx.replyWithPhoto(
             message,
             shouldReply && ctx.message?.message_id
               ? ({ reply_to_message_id: ctx.message.message_id } as ReplyExtra)
