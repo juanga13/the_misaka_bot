@@ -5,7 +5,7 @@ After=network-online.target
 [Service]
 Restart=on-failure
 WorkingDirectory=/home/ec2-user/projects/the_misaka_bot
-ExecStart=usr/home/ec2-user/.nvm/versions/node/v22.19.0/bin/node /home/ec2-user/projects/the_misaka_bot/dist/bot.js
+ExecStart=/home/ec2-user/.nvm/versions/node/v22.19.0/bin/node /home/ec2-user/projects/the_misaka_bot/dist/bot.js
 Environment=NODE_ENV=production
 StandardOutput=journal
 StandardError=journal
