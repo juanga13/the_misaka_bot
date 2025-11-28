@@ -54,7 +54,7 @@ const reactions: Reaction[] = [
     options: { reply: true },
   },
   {
-    keyword: /(dura)$/,
+    keyword: /\bdura$/,
     isRegex: true,
     type: MESSAGE_TYPES.text,
     message: 'Pero más dura',
