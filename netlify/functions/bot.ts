@@ -49,19 +49,29 @@ bot.catch((err: unknown, ctx: Context) => {
 
 // Launch
 export const handler = async (event: any) => {
-  // Telegram webhooks only send POST requests
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
   try {
-    // Parse the incoming webhook payload from Telegram
-    const body = JSON.parse(event.body || '{}');
+    let body;
 
-    // Pass the payload into your Telegraf instance
+    // Check if the body is URL-encoded or raw JSON
+    if (
+      event.headers['content-type'] === 'application/x-www-form-urlencoded' ||
+      (event.body && event.body.startsWith('user_id='))
+    ) {
+      // Convert url-encoded string to a usable object
+      const params = new URLSearchParams(event.body);
+      body = Object.fromEntries(params.entries());
+    } else {
+      // Default to JSON parsing
+      body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
+    }
+
+    // Pass the parsed payload into your Telegraf instance
     await bot.handleUpdate(body);
 
-    // Acknowledge receipt to Telegram
     return {
       statusCode: 200,
       body: JSON.stringify({ message: 'Update processed successfully' }),
