@@ -12,8 +12,7 @@ import { setupMbtiCommand } from './commands/setupMbtiCommand';
 import { setupBirthdayChecker } from './utils/setupBirthdayChecker';
 
 /**
- * Builds the bot with every command registered. Shared by the long-polling
- * entry (src/bot.ts) and the Netlify webhook handler (netlify/functions/bot.ts).
+ * Builds the bot with every command registered.
  */
 export const createBot = (): Telegraf<Context> => {
   const token = process.env.TOKEN;

@@ -7,7 +7,7 @@ dotenv.config({
 import { createBot } from './createBot';
 
 // Long-polling entry point, for always-on hosts (Docker on Unraid, systemd, etc).
-// Note: launch() removes any webhook set on the token (e.g. the Netlify one).
+// Note: launch() removes any webhook set on the token.
 const bot = createBot();
 
 bot.launch();
