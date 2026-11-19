@@ -1,0 +1,13 @@
+services:
+  misakabot:
+    build: https://github.com/juanga13/the_misaka_bot.git#main
+    container_name: misakabot
+    restart: unless-stopped
+    environment:
+      - TOKEN=${TOKEN}
+      - NODE_ENV=production
+      - DATA_PATH=/data/data.json
+      # Daily birthday check runs at 09:00 in this timezone
+      - TZ=${TZ:-America/Argentina/Buenos_Aires}
+    volumes:
+      - /mnt/user/appdata/misakabot:/data

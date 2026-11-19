@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.vscode
+.env
+.env.*
+data.json
+data.csv
+legacy
+netlify

@@ -50,7 +50,7 @@ export interface DatabaseSchema {
 export class DataController {
   private db: Low<DatabaseSchema>
 
-  constructor(path = 'data.json') {
+  constructor(path = process.env.DATA_PATH ?? 'data.json') {
     const adapter = new JSONFile<DatabaseSchema>(path)
     this.db = new Low(adapter, {})
   }
